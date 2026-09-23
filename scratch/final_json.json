@@ -1,0 +1,2212 @@
+{
+  "original": [
+    {
+      "n": 1,
+      "text": "#include <iostream>",
+      "highlight": "none"
+    },
+    {
+      "n": 2,
+      "text": "#include <string>",
+      "highlight": "none"
+    },
+    {
+      "n": 3,
+      "text": "#include <vector>",
+      "highlight": "none"
+    },
+    {
+      "n": 4,
+      "text": "",
+      "highlight": "none"
+    },
+    {
+      "n": 5,
+      "text": "// \u2500\u2500 Forward declarations \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500",
+      "highlight": "none"
+    },
+    {
+      "n": 6,
+      "text": "int add(int a, int b);",
+      "highlight": "none"
+    },
+    {
+      "n": 7,
+      "text": "int divide(int a, int b);",
+      "highlight": "none"
+    },
+    {
+      "n": 8,
+      "text": "void printNumbers();",
+      "highlight": "none"
+    },
+    {
+      "n": 9,
+      "text": "int calculate(int x);",
+      "highlight": "none"
+    },
+    {
+      "n": 10,
+      "text": "void processInput();",
+      "highlight": "none"
+    },
+    {
+      "n": 11,
+      "text": "void checkValue();",
+      "highlight": "none"
+    },
+    {
+      "n": 12,
+      "text": "void printMessage();",
+      "highlight": "none"
+    },
+    {
+      "n": 13,
+      "text": "void arrayOps();",
+      "highlight": "none"
+    },
+    {
+      "n": 14,
+      "text": "void stringOps();",
+      "highlight": "none"
+    },
+    {
+      "n": 15,
+      "text": "void loopOps();",
+      "highlight": "none"
+    },
+    {
+      "n": 16,
+      "text": "",
+      "highlight": "none"
+    },
+    {
+      "n": 17,
+      "text": "// \u2500\u2500 Utilities \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500",
+      "highlight": "none"
+    },
+    {
+      "n": 18,
+      "text": "",
+      "highlight": "none"
+    },
+    {
+      "n": 19,
+      "text": "int multiply(int a, int b) {",
+      "highlight": "none"
+    },
+    {
+      "n": 20,
+      "text": "  int result = a * b;",
+      "highlight": "none"
+    },
+    {
+      "n": 21,
+      "text": "  if (result > 10000) {",
+      "highlight": "none"
+    },
+    {
+      "n": 22,
+      "text": "    std::cout << \"Large result: \" << result << \"\\n\";",
+      "highlight": "none"
+    },
+    {
+      "n": 23,
+      "text": "  }",
+      "highlight": "none"
+    },
+    {
+      "n": 24,
+      "text": "  return result;",
+      "highlight": "none"
+    },
+    {
+      "n": 25,
+      "text": "}",
+      "highlight": "none"
+    },
+    {
+      "n": 26,
+      "text": "",
+      "highlight": "none"
+    },
+    {
+      "n": 27,
+      "text": "int modulo(int a, int b) {",
+      "highlight": "none"
+    },
+    {
+      "n": 28,
+      "text": "  if (b == 0)",
+      "highlight": "none"
+    },
+    {
+      "n": 29,
+      "text": "    return 0;",
+      "highlight": "none"
+    },
+    {
+      "n": 30,
+      "text": "  return a % b;",
+      "highlight": "none"
+    },
+    {
+      "n": 31,
+      "text": "}",
+      "highlight": "none"
+    },
+    {
+      "n": 32,
+      "text": "",
+      "highlight": "none"
+    },
+    {
+      "n": 33,
+      "text": "void printHeader(std::string title) {",
+      "highlight": "none"
+    },
+    {
+      "n": 34,
+      "text": "  std::cout << \"=== \" << title << \" ===\\n\";",
+      "highlight": "none"
+    },
+    {
+      "n": 35,
+      "text": "}",
+      "highlight": "none"
+    },
+    {
+      "n": 36,
+      "text": "",
+      "highlight": "none"
+    },
+    {
+      "n": 37,
+      "text": "bool isEven(int n) { return n % 2 == 0; }",
+      "highlight": "none"
+    },
+    {
+      "n": 38,
+      "text": "",
+      "highlight": "none"
+    },
+    {
+      "n": 39,
+      "text": "bool isPositive(int n) { return n > 0; }",
+      "highlight": "none"
+    },
+    {
+      "n": 40,
+      "text": "",
+      "highlight": "none"
+    },
+    {
+      "n": 41,
+      "text": "// \u2500\u2500 Error 1: Missing semicolon \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500",
+      "highlight": "none"
+    },
+    {
+      "n": 42,
+      "text": "",
+      "highlight": "none"
+    },
+    {
+      "n": 43,
+      "text": "int add(int a, int b) {",
+      "highlight": "none"
+    },
+    {
+      "n": 44,
+      "text": "  int result int temp = a + b;",
+      "highlight": "none"
+    },
+    {
+      "n": 45,
+      "text": "  if (temp > 100) {",
+      "highlight": "none"
+    },
+    {
+      "n": 46,
+      "text": "    std::cout << \"Sum is large\\n\";",
+      "highlight": "none"
+    },
+    {
+      "n": 47,
+      "text": "  }",
+      "highlight": "none"
+    },
+    {
+      "n": 48,
+      "text": "  return a + b;",
+      "highlight": "none"
+    },
+    {
+      "n": 49,
+      "text": "}",
+      "highlight": "none"
+    },
+    {
+      "n": 50,
+      "text": "",
+      "highlight": "none"
+    },
+    {
+      "n": 51,
+      "text": "// \u2500\u2500 Error 2: Division by zero \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500",
+      "highlight": "none"
+    },
+    {
+      "n": 52,
+      "text": "",
+      "highlight": "none"
+    },
+    {
+      "n": 53,
+      "text": "int divide(int a, int b) {",
+      "highlight": "none"
+    },
+    {
+      "n": 54,
+      "text": "  int backup = a;",
+      "highlight": "none"
+    },
+    {
+      "n": 55,
+      "text": "  std::cout << \"Dividing \" << a << \" by \" << b << \"\\n\";",
+      "highlight": "none"
+    },
+    {
+      "n": 56,
+      "text": "  std::cout << a / b << \"\\n\";",
+      "highlight": "none"
+    },
+    {
+      "n": 57,
+      "text": "  return a / b;",
+      "highlight": "none"
+    },
+    {
+      "n": 58,
+      "text": "}",
+      "highlight": "none"
+    },
+    {
+      "n": 59,
+      "text": "",
+      "highlight": "none"
+    },
+    {
+      "n": 60,
+      "text": "// \u2500\u2500 Error 3: Misspelled keyword \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500",
+      "highlight": "none"
+    },
+    {
+      "n": 61,
+      "text": "",
+      "highlight": "none"
+    },
+    {
+      "n": 62,
+      "text": "void printNumbers() {",
+      "highlight": "none"
+    },
+    {
+      "n": 63,
+      "text": "  int i = 1;",
+      "highlight": "none"
+    },
+    {
+      "n": 64,
+      "text": "  int total = 0;",
+      "highlight": "none"
+    },
+    {
+      "n": 65,
+      "text": "  whlie(i <= 5) {",
+      "highlight": "error"
+    },
+    {
+      "n": 66,
+      "text": "    total += i;",
+      "highlight": "none"
+    },
+    {
+      "n": 67,
+      "text": "    std::cout << \"Number: \" << i << \"\\n\";",
+      "highlight": "none"
+    },
+    {
+      "n": 68,
+      "text": "    i++;",
+      "highlight": "none"
+    },
+    {
+      "n": 69,
+      "text": "  }",
+      "highlight": "none"
+    },
+    {
+      "n": 70,
+      "text": "  std::cout << \"Total: \" << total << \"\\n\";",
+      "highlight": "none"
+    },
+    {
+      "n": 71,
+      "text": "}",
+      "highlight": "none"
+    },
+    {
+      "n": 72,
+      "text": "",
+      "highlight": "none"
+    },
+    {
+      "n": 73,
+      "text": "// \u2500\u2500 Error 4: Integer overflow + uninitialized variable \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500",
+      "highlight": "none"
+    },
+    {
+      "n": 74,
+      "text": "",
+      "highlight": "none"
+    },
+    {
+      "n": 75,
+      "text": "int calculate(int x) {",
+      "highlight": "none"
+    },
+    {
+      "n": 76,
+      "text": "  int big = 2147483647;",
+      "highlight": "none"
+    },
+    {
+      "n": 77,
+      "text": "  big = big + 1;",
+      "highlight": "none"
+    },
+    {
+      "n": 78,
+      "text": "  int uninit = 7;",
+      "highlight": "none"
+    },
+    {
+      "n": 79,
+      "text": "  int factor = 3;",
+      "highlight": "none"
+    },
+    {
+      "n": 80,
+      "text": "  std::cout << uninit << \"\\n\";",
+      "highlight": "none"
+    },
+    {
+      "n": 81,
+      "text": "  int local = x * factor;",
+      "highlight": "none"
+    },
+    {
+      "n": 82,
+      "text": "  if (local > 50) {",
+      "highlight": "none"
+    },
+    {
+      "n": 83,
+      "text": "    std::cout << \"Large calculation: \" << local << \"\\n\";",
+      "highlight": "none"
+    },
+    {
+      "n": 84,
+      "text": "  }",
+      "highlight": "none"
+    },
+    {
+      "n": 85,
+      "text": "  return big + x;",
+      "highlight": "none"
+    },
+    {
+      "n": 86,
+      "text": "}",
+      "highlight": "none"
+    },
+    {
+      "n": 87,
+      "text": "",
+      "highlight": "none"
+    },
+    {
+      "n": 88,
+      "text": "// \u2500\u2500 Error 5: Wrong stream operator \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500",
+      "highlight": "none"
+    },
+    {
+      "n": 89,
+      "text": "",
+      "highlight": "none"
+    },
+    {
+      "n": 90,
+      "text": "void processInput() {",
+      "highlight": "none"
+    },
+    {
+      "n": 91,
+      "text": "  int y = 20;",
+      "highlight": "none"
+    },
+    {
+      "n": 92,
+      "text": "  int z = 30;",
+      "highlight": "none"
+    },
+    {
+      "n": 93,
+      "text": "  std::cout << \"Enter a number: \\n\";",
+      "highlight": "none"
+    },
+    {
+      "n": 94,
+      "text": "  std::cin << y;",
+      "highlight": "error"
+    },
+    {
+      "n": 95,
+      "text": "  std::cout << \"You entered: \" << y << \"\\n\";",
+      "highlight": "none"
+    },
+    {
+      "n": 96,
+      "text": "  std::cout << \"Double: \" << y * 2 << \"\\n\";",
+      "highlight": "none"
+    },
+    {
+      "n": 97,
+      "text": "  z = y + 10;",
+      "highlight": "none"
+    },
+    {
+      "n": 98,
+      "text": "  std::cout << \"Z is: \" << z << \"\\n\";",
+      "highlight": "none"
+    },
+    {
+      "n": 99,
+      "text": "}",
+      "highlight": "none"
+    },
+    {
+      "n": 100,
+      "text": "",
+      "highlight": "none"
+    },
+    {
+      "n": 101,
+      "text": "// \u2500\u2500 Error 6: Redefinition + assignment in condition \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500",
+      "highlight": "none"
+    },
+    {
+      "n": 102,
+      "text": "",
+      "highlight": "none"
+    },
+    {
+      "n": 103,
+      "text": "void checkValue() {",
+      "highlight": "none"
+    },
+    {
+      "n": 104,
+      "text": "  int x = 10;",
+      "highlight": "none"
+    },
+    {
+      "n": 105,
+      "text": "  int total = 0;",
+      "highlight": "none"
+    },
+    {
+      "n": 106,
+      "text": "  int x = 99;",
+      "highlight": "error"
+    },
+    {
+      "n": 107,
+      "text": "  total = x + total;",
+      "highlight": "none"
+    },
+    {
+      "n": 108,
+      "text": "  if (x = 50) {",
+      "highlight": "none"
+    },
+    {
+      "n": 109,
+      "text": "    std::cout << \"x is 50\\n\";",
+      "highlight": "none"
+    },
+    {
+      "n": 110,
+      "text": "    total += x;",
+      "highlight": "none"
+    },
+    {
+      "n": 111,
+      "text": "  }",
+      "highlight": "none"
+    },
+    {
+      "n": 112,
+      "text": "  for (int i = 0; i < 3; i++) {",
+      "highlight": "none"
+    },
+    {
+      "n": 113,
+      "text": "    total += multiply(x, i);",
+      "highlight": "none"
+    },
+    {
+      "n": 114,
+      "text": "  }",
+      "highlight": "none"
+    },
+    {
+      "n": 115,
+      "text": "  std::cout << \"Total: \" << total << \"\\n\";",
+      "highlight": "none"
+    },
+    {
+      "n": 116,
+      "text": "}",
+      "highlight": "none"
+    },
+    {
+      "n": 117,
+      "text": "",
+      "highlight": "none"
+    },
+    {
+      "n": 118,
+      "text": "// \u2500\u2500 Error 7: Missing closing brace \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500",
+      "highlight": "none"
+    },
+    {
+      "n": 119,
+      "text": "",
+      "highlight": "none"
+    },
+    {
+      "n": 120,
+      "text": "void printMessage() {",
+      "highlight": "none"
+    },
+    {
+      "n": 121,
+      "text": "  int y = 20;",
+      "highlight": "none"
+    },
+    {
+      "n": 122,
+      "text": "  int count = 0;",
+      "highlight": "none"
+    },
+    {
+      "n": 123,
+      "text": "  for (int i = 0; i < 5; i++) {",
+      "highlight": "none"
+    },
+    {
+      "n": 124,
+      "text": "    count += i;",
+      "highlight": "none"
+    },
+    {
+      "n": 125,
+      "text": "  }",
+      "highlight": "none"
+    },
+    {
+      "n": 126,
+      "text": "  if (y > 10) {",
+      "highlight": "none"
+    },
+    {
+      "n": 127,
+      "text": "    std::cout << \"y is big: \" << y << \"\\n\";",
+      "highlight": "none"
+    },
+    {
+      "n": 128,
+      "text": "    count++;",
+      "highlight": "none"
+    },
+    {
+      "n": 129,
+      "text": "  }",
+      "highlight": "none"
+    },
+    {
+      "n": 130,
+      "text": "",
+      "highlight": "none"
+    },
+    {
+      "n": 131,
+      "text": "  // \u2500\u2500 Array operations \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500",
+      "highlight": "none"
+    },
+    {
+      "n": 132,
+      "text": "",
+      "highlight": "none"
+    },
+    {
+      "n": 133,
+      "text": "  void arrayOps() {",
+      "highlight": "none"
+    },
+    {
+      "n": 134,
+      "text": "    int arr[5] = {1, 2, 3, 4, 5};",
+      "highlight": "none"
+    },
+    {
+      "n": 135,
+      "text": "    int sum = 0;",
+      "highlight": "none"
+    },
+    {
+      "n": 136,
+      "text": "    for (int i = 0; i < 5; i++) {",
+      "highlight": "none"
+    },
+    {
+      "n": 137,
+      "text": "      sum += arr[i];",
+      "highlight": "none"
+    },
+    {
+      "n": 138,
+      "text": "      if (isEven(arr[i])) {",
+      "highlight": "none"
+    },
+    {
+      "n": 139,
+      "text": "        std::cout << arr[i] << \" is even\\n\";",
+      "highlight": "none"
+    },
+    {
+      "n": 140,
+      "text": "      }",
+      "highlight": "none"
+    },
+    {
+      "n": 141,
+      "text": "    }",
+      "highlight": "none"
+    },
+    {
+      "n": 142,
+      "text": "    std::cout << \"Array sum: \" << sum << \"\\n\";",
+      "highlight": "none"
+    },
+    {
+      "n": 143,
+      "text": "  }",
+      "highlight": "none"
+    },
+    {
+      "n": 144,
+      "text": "",
+      "highlight": "none"
+    },
+    {
+      "n": 145,
+      "text": "  // \u2500\u2500 String operations \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500",
+      "highlight": "none"
+    },
+    {
+      "n": 146,
+      "text": "",
+      "highlight": "none"
+    },
+    {
+      "n": 147,
+      "text": "  void stringOps() {",
+      "highlight": "none"
+    },
+    {
+      "n": 148,
+      "text": "    std::string name = \"compiler\";",
+      "highlight": "none"
+    },
+    {
+      "n": 149,
+      "text": "    std::string upper = \"\";",
+      "highlight": "none"
+    },
+    {
+      "n": 150,
+      "text": "    for (char c : name) {",
+      "highlight": "none"
+    },
+    {
+      "n": 151,
+      "text": "      upper += (c - 32);",
+      "highlight": "none"
+    },
+    {
+      "n": 152,
+      "text": "    }",
+      "highlight": "none"
+    },
+    {
+      "n": 153,
+      "text": "    std::cout << \"Upper: \" << upper << \"\\n\";",
+      "highlight": "none"
+    },
+    {
+      "n": 154,
+      "text": "    std::cout << \"Length: \" << name.length() << \"\\n\";",
+      "highlight": "none"
+    },
+    {
+      "n": 155,
+      "text": "  }",
+      "highlight": "none"
+    },
+    {
+      "n": 156,
+      "text": "",
+      "highlight": "none"
+    },
+    {
+      "n": 157,
+      "text": "  // \u2500\u2500 Loop operations \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500",
+      "highlight": "none"
+    },
+    {
+      "n": 158,
+      "text": "",
+      "highlight": "none"
+    },
+    {
+      "n": 159,
+      "text": "  void loopOps() {",
+      "highlight": "none"
+    },
+    {
+      "n": 160,
+      "text": "    int sum = 0;",
+      "highlight": "none"
+    },
+    {
+      "n": 161,
+      "text": "    for (int i = 1; i <= 10; i++) {",
+      "highlight": "none"
+    },
+    {
+      "n": 162,
+      "text": "      sum += i;",
+      "highlight": "none"
+    },
+    {
+      "n": 163,
+      "text": "    }",
+      "highlight": "none"
+    },
+    {
+      "n": 164,
+      "text": "    std::cout << \"Loop sum: \" << sum << \"\\n\";",
+      "highlight": "none"
+    },
+    {
+      "n": 165,
+      "text": "",
+      "highlight": "none"
+    },
+    {
+      "n": 166,
+      "text": "    int j = 10;",
+      "highlight": "none"
+    },
+    {
+      "n": 167,
+      "text": "    while (j > 0) {",
+      "highlight": "none"
+    },
+    {
+      "n": 168,
+      "text": "      if (isPositive(j)) {",
+      "highlight": "none"
+    },
+    {
+      "n": 169,
+      "text": "        std::cout << j << \" \";",
+      "highlight": "none"
+    },
+    {
+      "n": 170,
+      "text": "      }",
+      "highlight": "none"
+    },
+    {
+      "n": 171,
+      "text": "      j -= 2;",
+      "highlight": "none"
+    },
+    {
+      "n": 172,
+      "text": "    }",
+      "highlight": "none"
+    },
+    {
+      "n": 173,
+      "text": "    std::cout << \"\\n\";",
+      "highlight": "none"
+    },
+    {
+      "n": 174,
+      "text": "  }",
+      "highlight": "none"
+    },
+    {
+      "n": 175,
+      "text": "",
+      "highlight": "none"
+    },
+    {
+      "n": 176,
+      "text": "  // \u2500\u2500 Error 8: Undeclared variable \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500",
+      "highlight": "none"
+    },
+    {
+      "n": 177,
+      "text": "",
+      "highlight": "none"
+    },
+    {
+      "n": 178,
+      "text": "  int main() {",
+      "highlight": "none"
+    },
+    {
+      "n": 179,
+      "text": "    printHeader(\"Self Healing Compiler Test\");",
+      "highlight": "none"
+    },
+    {
+      "n": 180,
+      "text": "",
+      "highlight": "none"
+    },
+    {
+      "n": 181,
+      "text": "    w = 999;",
+      "highlight": "none"
+    },
+    {
+      "n": 182,
+      "text": "",
+      "highlight": "none"
+    },
+    {
+      "n": 183,
+      "text": "    int a = 10;",
+      "highlight": "none"
+    },
+    {
+      "n": 184,
+      "text": "    int b = 0;",
+      "highlight": "none"
+    },
+    {
+      "n": 185,
+      "text": "",
+      "highlight": "none"
+    },
+    {
+      "n": 186,
+      "text": "    printHeader(\"Division\");",
+      "highlight": "none"
+    },
+    {
+      "n": 187,
+      "text": "    divide(a, b);",
+      "highlight": "none"
+    },
+    {
+      "n": 188,
+      "text": "",
+      "highlight": "none"
+    },
+    {
+      "n": 189,
+      "text": "    printHeader(\"Numbers\");",
+      "highlight": "none"
+    },
+    {
+      "n": 190,
+      "text": "    printNumbers();",
+      "highlight": "none"
+    },
+    {
+      "n": 191,
+      "text": "",
+      "highlight": "none"
+    },
+    {
+      "n": 192,
+      "text": "    printHeader(\"Calculate\");",
+      "highlight": "none"
+    },
+    {
+      "n": 193,
+      "text": "    int res = calculate(5);",
+      "highlight": "none"
+    },
+    {
+      "n": 194,
+      "text": "    std::cout << \"Result: \" << res << \"\\n\";",
+      "highlight": "none"
+    },
+    {
+      "n": 195,
+      "text": "",
+      "highlight": "none"
+    },
+    {
+      "n": 196,
+      "text": "    printHeader(\"Input\");",
+      "highlight": "none"
+    },
+    {
+      "n": 197,
+      "text": "    processInput();",
+      "highlight": "none"
+    },
+    {
+      "n": 198,
+      "text": "",
+      "highlight": "none"
+    },
+    {
+      "n": 199,
+      "text": "    printHeader(\"Check\");",
+      "highlight": "none"
+    },
+    {
+      "n": 200,
+      "text": "    checkValue();",
+      "highlight": "none"
+    },
+    {
+      "n": 201,
+      "text": "",
+      "highlight": "none"
+    },
+    {
+      "n": 202,
+      "text": "    printHeader(\"Message\");",
+      "highlight": "none"
+    },
+    {
+      "n": 203,
+      "text": "    printMessage();",
+      "highlight": "none"
+    },
+    {
+      "n": 204,
+      "text": "",
+      "highlight": "none"
+    },
+    {
+      "n": 205,
+      "text": "    printHeader(\"Array\");",
+      "highlight": "none"
+    },
+    {
+      "n": 206,
+      "text": "    arrayOps();",
+      "highlight": "none"
+    },
+    {
+      "n": 207,
+      "text": "",
+      "highlight": "none"
+    },
+    {
+      "n": 208,
+      "text": "    printHeader(\"String\");",
+      "highlight": "none"
+    },
+    {
+      "n": 209,
+      "text": "    stringOps();",
+      "highlight": "none"
+    },
+    {
+      "n": 210,
+      "text": "",
+      "highlight": "none"
+    },
+    {
+      "n": 211,
+      "text": "    printHeader(\"Loop\");",
+      "highlight": "none"
+    },
+    {
+      "n": 212,
+      "text": "    loopOps();",
+      "highlight": "none"
+    },
+    {
+      "n": 213,
+      "text": "",
+      "highlight": "none"
+    },
+    {
+      "n": 214,
+      "text": "    std::cout << \"Add: \" << add(3, 4) << \"\\n\";",
+      "highlight": "none"
+    },
+    {
+      "n": 215,
+      "text": "    std::cout << \"Multiply: \" << multiply(6, 7) << \"\\n\";",
+      "highlight": "none"
+    },
+    {
+      "n": 216,
+      "text": "    std::cout << \"Modulo: \" << modulo(10, 3) << \"\\n\";",
+      "highlight": "none"
+    },
+    {
+      "n": 217,
+      "text": "",
+      "highlight": "none"
+    },
+    {
+      "n": 218,
+      "text": "    return 0;",
+      "highlight": "none"
+    },
+    {
+      "n": 219,
+      "text": "  }",
+      "highlight": "none"
+    }
+  ],
+  "healed": [
+    {
+      "n": 1,
+      "text": "#include <iostream>",
+      "highlight": "none"
+    },
+    {
+      "n": 2,
+      "text": "#include <string>",
+      "highlight": "none"
+    },
+    {
+      "n": 3,
+      "text": "#include <vector>",
+      "highlight": "none"
+    },
+    {
+      "n": 4,
+      "text": "",
+      "highlight": "none"
+    },
+    {
+      "n": 5,
+      "text": "// \u2500\u2500 Forward declarations \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500",
+      "highlight": "none"
+    },
+    {
+      "n": 6,
+      "text": "int add(int a, int b);",
+      "highlight": "none"
+    },
+    {
+      "n": 7,
+      "text": "int divide(int a, int b);",
+      "highlight": "none"
+    },
+    {
+      "n": 8,
+      "text": "void printNumbers();",
+      "highlight": "none"
+    },
+    {
+      "n": 9,
+      "text": "int calculate(int x);",
+      "highlight": "none"
+    },
+    {
+      "n": 10,
+      "text": "void processInput();",
+      "highlight": "none"
+    },
+    {
+      "n": 11,
+      "text": "void checkValue();",
+      "highlight": "none"
+    },
+    {
+      "n": 12,
+      "text": "void printMessage();",
+      "highlight": "none"
+    },
+    {
+      "n": 13,
+      "text": "void arrayOps();",
+      "highlight": "none"
+    },
+    {
+      "n": 14,
+      "text": "void stringOps();",
+      "highlight": "none"
+    },
+    {
+      "n": 15,
+      "text": "void loopOps();",
+      "highlight": "none"
+    },
+    {
+      "n": 16,
+      "text": "",
+      "highlight": "none"
+    },
+    {
+      "n": 17,
+      "text": "// \u2500\u2500 Utilities \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500",
+      "highlight": "none"
+    },
+    {
+      "n": 18,
+      "text": "",
+      "highlight": "none"
+    },
+    {
+      "n": 19,
+      "text": "int multiply(int a, int b) {",
+      "highlight": "none"
+    },
+    {
+      "n": 20,
+      "text": "  int result = a * b;",
+      "highlight": "none"
+    },
+    {
+      "n": 21,
+      "text": "  if (result > 10000) {",
+      "highlight": "none"
+    },
+    {
+      "n": 22,
+      "text": "    std::cout << \"Large result: \" << result << \"\\n\";",
+      "highlight": "none"
+    },
+    {
+      "n": 23,
+      "text": "  }",
+      "highlight": "none"
+    },
+    {
+      "n": 24,
+      "text": "  return result;",
+      "highlight": "none"
+    },
+    {
+      "n": 25,
+      "text": "}",
+      "highlight": "none"
+    },
+    {
+      "n": 26,
+      "text": "",
+      "highlight": "none"
+    },
+    {
+      "n": 27,
+      "text": "int modulo(int a, int b) {",
+      "highlight": "none"
+    },
+    {
+      "n": 28,
+      "text": "  if (b == 0)",
+      "highlight": "none"
+    },
+    {
+      "n": 29,
+      "text": "    return 0;",
+      "highlight": "none"
+    },
+    {
+      "n": 30,
+      "text": "  return a % b;",
+      "highlight": "none"
+    },
+    {
+      "n": 31,
+      "text": "}",
+      "highlight": "none"
+    },
+    {
+      "n": 32,
+      "text": "",
+      "highlight": "none"
+    },
+    {
+      "n": 33,
+      "text": "void printHeader(std::string title) {",
+      "highlight": "none"
+    },
+    {
+      "n": 34,
+      "text": "  std::cout << \"=== \" << title << \" ===\\n\";",
+      "highlight": "none"
+    },
+    {
+      "n": 35,
+      "text": "}",
+      "highlight": "none"
+    },
+    {
+      "n": 36,
+      "text": "",
+      "highlight": "none"
+    },
+    {
+      "n": 37,
+      "text": "bool isEven(int n) { return n % 2 == 0; }",
+      "highlight": "none"
+    },
+    {
+      "n": 38,
+      "text": "",
+      "highlight": "none"
+    },
+    {
+      "n": 39,
+      "text": "bool isPositive(int n) { return n > 0; }",
+      "highlight": "none"
+    },
+    {
+      "n": 40,
+      "text": "",
+      "highlight": "none"
+    },
+    {
+      "n": 41,
+      "text": "// \u2500\u2500 Error 1: Missing semicolon \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500",
+      "highlight": "none"
+    },
+    {
+      "n": 42,
+      "text": "",
+      "highlight": "none"
+    },
+    {
+      "n": 43,
+      "text": "int add(int a, int b) {",
+      "highlight": "none"
+    },
+    {
+      "n": 44,
+      "text": "  int result int temp = a + b;",
+      "highlight": "none"
+    },
+    {
+      "n": 45,
+      "text": "  if (temp > 100) {",
+      "highlight": "none"
+    },
+    {
+      "n": 46,
+      "text": "    std::cout << \"Sum is large\\n\";",
+      "highlight": "none"
+    },
+    {
+      "n": 47,
+      "text": "  }",
+      "highlight": "none"
+    },
+    {
+      "n": 48,
+      "text": "  return a + b;",
+      "highlight": "none"
+    },
+    {
+      "n": 49,
+      "text": "}",
+      "highlight": "none"
+    },
+    {
+      "n": 50,
+      "text": "",
+      "highlight": "none"
+    },
+    {
+      "n": 51,
+      "text": "// \u2500\u2500 Error 2: Division by zero \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500",
+      "highlight": "none"
+    },
+    {
+      "n": 52,
+      "text": "",
+      "highlight": "none"
+    },
+    {
+      "n": 53,
+      "text": "int divide(int a, int b) {",
+      "highlight": "none"
+    },
+    {
+      "n": 54,
+      "text": "  int backup = a;",
+      "highlight": "none"
+    },
+    {
+      "n": 55,
+      "text": "  std::cout << \"Dividing \" << a << \" by \" << b << \"\\n\";",
+      "highlight": "none"
+    },
+    {
+      "n": 56,
+      "text": "  std::cout << a / b << \"\\n\";",
+      "highlight": "none"
+    },
+    {
+      "n": 57,
+      "text": "  return a / b;",
+      "highlight": "none"
+    },
+    {
+      "n": 58,
+      "text": "}",
+      "highlight": "none"
+    },
+    {
+      "n": 59,
+      "text": "",
+      "highlight": "none"
+    },
+    {
+      "n": 60,
+      "text": "// \u2500\u2500 Error 3: Misspelled keyword \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500",
+      "highlight": "none"
+    },
+    {
+      "n": 61,
+      "text": "",
+      "highlight": "none"
+    },
+    {
+      "n": 62,
+      "text": "void printNumbers() {",
+      "highlight": "none"
+    },
+    {
+      "n": 63,
+      "text": "  int i = 1;",
+      "highlight": "none"
+    },
+    {
+      "n": 64,
+      "text": "  int total = 0;",
+      "highlight": "none"
+    },
+    {
+      "n": 65,
+      "text": "  while(i <= 5) {",
+      "highlight": "fixed"
+    },
+    {
+      "n": 66,
+      "text": "    total += i;",
+      "highlight": "none"
+    },
+    {
+      "n": 67,
+      "text": "    std::cout << \"Number: \" << i << \"\\n\";",
+      "highlight": "none"
+    },
+    {
+      "n": 68,
+      "text": "    i++;",
+      "highlight": "none"
+    },
+    {
+      "n": 69,
+      "text": "  }",
+      "highlight": "none"
+    },
+    {
+      "n": 70,
+      "text": "  std::cout << \"Total: \" << total << \"\\n\";",
+      "highlight": "none"
+    },
+    {
+      "n": 71,
+      "text": "}",
+      "highlight": "none"
+    },
+    {
+      "n": 72,
+      "text": "",
+      "highlight": "none"
+    },
+    {
+      "n": 73,
+      "text": "// \u2500\u2500 Error 4: Integer overflow + uninitialized variable \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500",
+      "highlight": "none"
+    },
+    {
+      "n": 74,
+      "text": "",
+      "highlight": "none"
+    },
+    {
+      "n": 75,
+      "text": "int calculate(int x) {",
+      "highlight": "none"
+    },
+    {
+      "n": 76,
+      "text": "  int big = 2147483647;",
+      "highlight": "none"
+    },
+    {
+      "n": 77,
+      "text": "  big = big + 1;",
+      "highlight": "none"
+    },
+    {
+      "n": 78,
+      "text": "  int uninit = 7;",
+      "highlight": "none"
+    },
+    {
+      "n": 79,
+      "text": "  int factor = 3;",
+      "highlight": "none"
+    },
+    {
+      "n": 80,
+      "text": "  std::cout << uninit << \"\\n\";",
+      "highlight": "none"
+    },
+    {
+      "n": 81,
+      "text": "  int local = x * factor;",
+      "highlight": "none"
+    },
+    {
+      "n": 82,
+      "text": "  if (local > 50) {",
+      "highlight": "none"
+    },
+    {
+      "n": 83,
+      "text": "    std::cout << \"Large calculation: \" << local << \"\\n\";",
+      "highlight": "none"
+    },
+    {
+      "n": 84,
+      "text": "  }",
+      "highlight": "none"
+    },
+    {
+      "n": 85,
+      "text": "  return big + x;",
+      "highlight": "none"
+    },
+    {
+      "n": 86,
+      "text": "}",
+      "highlight": "none"
+    },
+    {
+      "n": 87,
+      "text": "",
+      "highlight": "none"
+    },
+    {
+      "n": 88,
+      "text": "// \u2500\u2500 Error 5: Wrong stream operator \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500",
+      "highlight": "none"
+    },
+    {
+      "n": 89,
+      "text": "",
+      "highlight": "none"
+    },
+    {
+      "n": 90,
+      "text": "void processInput() {",
+      "highlight": "none"
+    },
+    {
+      "n": 91,
+      "text": "  int y = 20;",
+      "highlight": "none"
+    },
+    {
+      "n": 92,
+      "text": "  int z = 30;",
+      "highlight": "none"
+    },
+    {
+      "n": 93,
+      "text": "  std::cout << \"Enter a number: \\n\";",
+      "highlight": "none"
+    },
+    {
+      "n": 94,
+      "text": "  std::cin >> y;",
+      "highlight": "fixed"
+    },
+    {
+      "n": 95,
+      "text": "  std::cout << \"You entered: \" << y << \"\\n\";",
+      "highlight": "none"
+    },
+    {
+      "n": 96,
+      "text": "  std::cout << \"Double: \" << y * 2 << \"\\n\";",
+      "highlight": "none"
+    },
+    {
+      "n": 97,
+      "text": "  z = y + 10;",
+      "highlight": "none"
+    },
+    {
+      "n": 98,
+      "text": "  std::cout << \"Z is: \" << z << \"\\n\";",
+      "highlight": "none"
+    },
+    {
+      "n": 99,
+      "text": "}",
+      "highlight": "none"
+    },
+    {
+      "n": 100,
+      "text": "",
+      "highlight": "none"
+    },
+    {
+      "n": 101,
+      "text": "// \u2500\u2500 Error 6: Redefinition + assignment in condition \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500",
+      "highlight": "none"
+    },
+    {
+      "n": 102,
+      "text": "",
+      "highlight": "none"
+    },
+    {
+      "n": 103,
+      "text": "void checkValue() {",
+      "highlight": "none"
+    },
+    {
+      "n": 104,
+      "text": "  int x = 10;",
+      "highlight": "none"
+    },
+    {
+      "n": 105,
+      "text": "  int total = 0;",
+      "highlight": "none"
+    },
+    {
+      "n": 106,
+      "text": "  x = 99;",
+      "highlight": "fixed"
+    },
+    {
+      "n": 107,
+      "text": "  total = x + total;",
+      "highlight": "none"
+    },
+    {
+      "n": 108,
+      "text": "  if (x = 50) {",
+      "highlight": "none"
+    },
+    {
+      "n": 109,
+      "text": "    std::cout << \"x is 50\\n\";",
+      "highlight": "none"
+    },
+    {
+      "n": 110,
+      "text": "    total += x;",
+      "highlight": "none"
+    },
+    {
+      "n": 111,
+      "text": "  }",
+      "highlight": "none"
+    },
+    {
+      "n": 112,
+      "text": "  for (int i = 0; i < 3; i++) {",
+      "highlight": "none"
+    },
+    {
+      "n": 113,
+      "text": "    total += multiply(x, i);",
+      "highlight": "none"
+    },
+    {
+      "n": 114,
+      "text": "  }",
+      "highlight": "none"
+    },
+    {
+      "n": 115,
+      "text": "  std::cout << \"Total: \" << total << \"\\n\";",
+      "highlight": "none"
+    },
+    {
+      "n": 116,
+      "text": "}",
+      "highlight": "none"
+    },
+    {
+      "n": 117,
+      "text": "",
+      "highlight": "none"
+    },
+    {
+      "n": 118,
+      "text": "// \u2500\u2500 Error 7: Missing closing brace \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500",
+      "highlight": "none"
+    },
+    {
+      "n": 119,
+      "text": "",
+      "highlight": "none"
+    },
+    {
+      "n": 120,
+      "text": "void printMessage() {",
+      "highlight": "none"
+    },
+    {
+      "n": 121,
+      "text": "  int y = 20;",
+      "highlight": "none"
+    },
+    {
+      "n": 122,
+      "text": "  int count = 0;",
+      "highlight": "none"
+    },
+    {
+      "n": 123,
+      "text": "  for (int i = 0; i < 5; i++) {",
+      "highlight": "none"
+    },
+    {
+      "n": 124,
+      "text": "    count += i;",
+      "highlight": "none"
+    },
+    {
+      "n": 125,
+      "text": "  }",
+      "highlight": "none"
+    },
+    {
+      "n": 126,
+      "text": "  if (y > 10) {",
+      "highlight": "none"
+    },
+    {
+      "n": 127,
+      "text": "    std::cout << \"y is big: \" << y << \"\\n\";",
+      "highlight": "none"
+    },
+    {
+      "n": 128,
+      "text": "    count++;",
+      "highlight": "none"
+    },
+    {
+      "n": 129,
+      "text": "  }",
+      "highlight": "none"
+    },
+    {
+      "n": 130,
+      "text": "",
+      "highlight": "none"
+    },
+    {
+      "n": 131,
+      "text": "  // \u2500\u2500 Array operations \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500",
+      "highlight": "none"
+    },
+    {
+      "n": 132,
+      "text": "",
+      "highlight": "none"
+    },
+    {
+      "n": 133,
+      "text": "}",
+      "highlight": "inserted"
+    },
+    {
+      "n": 134,
+      "text": "  void arrayOps() {",
+      "highlight": "none"
+    },
+    {
+      "n": 135,
+      "text": "    int arr[5] = {1, 2, 3, 4, 5};",
+      "highlight": "none"
+    },
+    {
+      "n": 136,
+      "text": "    int sum = 0;",
+      "highlight": "none"
+    },
+    {
+      "n": 137,
+      "text": "    for (int i = 0; i < 5; i++) {",
+      "highlight": "none"
+    },
+    {
+      "n": 138,
+      "text": "      sum += arr[i];",
+      "highlight": "none"
+    },
+    {
+      "n": 139,
+      "text": "      if (isEven(arr[i])) {",
+      "highlight": "none"
+    },
+    {
+      "n": 140,
+      "text": "        std::cout << arr[i] << \" is even\\n\";",
+      "highlight": "none"
+    },
+    {
+      "n": 141,
+      "text": "      }",
+      "highlight": "none"
+    },
+    {
+      "n": 142,
+      "text": "    }",
+      "highlight": "none"
+    },
+    {
+      "n": 143,
+      "text": "    std::cout << \"Array sum: \" << sum << \"\\n\";",
+      "highlight": "none"
+    },
+    {
+      "n": 144,
+      "text": "  }",
+      "highlight": "none"
+    },
+    {
+      "n": 145,
+      "text": "",
+      "highlight": "none"
+    },
+    {
+      "n": 146,
+      "text": "  // \u2500\u2500 String operations \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500",
+      "highlight": "none"
+    },
+    {
+      "n": 147,
+      "text": "",
+      "highlight": "none"
+    },
+    {
+      "n": 148,
+      "text": "  void stringOps() {",
+      "highlight": "none"
+    },
+    {
+      "n": 149,
+      "text": "    std::string name = \"compiler\";",
+      "highlight": "none"
+    },
+    {
+      "n": 150,
+      "text": "    std::string upper = \"\";",
+      "highlight": "none"
+    },
+    {
+      "n": 151,
+      "text": "    for (char c : name) {",
+      "highlight": "none"
+    },
+    {
+      "n": 152,
+      "text": "      upper += (c - 32);",
+      "highlight": "none"
+    },
+    {
+      "n": 153,
+      "text": "    }",
+      "highlight": "none"
+    },
+    {
+      "n": 154,
+      "text": "    std::cout << \"Upper: \" << upper << \"\\n\";",
+      "highlight": "none"
+    },
+    {
+      "n": 155,
+      "text": "    std::cout << \"Length: \" << name.length() << \"\\n\";",
+      "highlight": "none"
+    },
+    {
+      "n": 156,
+      "text": "  }",
+      "highlight": "none"
+    },
+    {
+      "n": 157,
+      "text": "",
+      "highlight": "none"
+    },
+    {
+      "n": 158,
+      "text": "  // \u2500\u2500 Loop operations \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500",
+      "highlight": "none"
+    },
+    {
+      "n": 159,
+      "text": "",
+      "highlight": "none"
+    },
+    {
+      "n": 160,
+      "text": "  void loopOps() {",
+      "highlight": "none"
+    },
+    {
+      "n": 161,
+      "text": "    int sum = 0;",
+      "highlight": "none"
+    },
+    {
+      "n": 162,
+      "text": "    for (int i = 1; i <= 10; i++) {",
+      "highlight": "none"
+    },
+    {
+      "n": 163,
+      "text": "      sum += i;",
+      "highlight": "none"
+    },
+    {
+      "n": 164,
+      "text": "    }",
+      "highlight": "none"
+    },
+    {
+      "n": 165,
+      "text": "    std::cout << \"Loop sum: \" << sum << \"\\n\";",
+      "highlight": "none"
+    },
+    {
+      "n": 166,
+      "text": "",
+      "highlight": "none"
+    },
+    {
+      "n": 167,
+      "text": "    int j = 10;",
+      "highlight": "none"
+    },
+    {
+      "n": 168,
+      "text": "    while (j > 0) {",
+      "highlight": "none"
+    },
+    {
+      "n": 169,
+      "text": "      if (isPositive(j)) {",
+      "highlight": "none"
+    },
+    {
+      "n": 170,
+      "text": "        std::cout << j << \" \";",
+      "highlight": "none"
+    },
+    {
+      "n": 171,
+      "text": "      }",
+      "highlight": "none"
+    },
+    {
+      "n": 172,
+      "text": "      j -= 2;",
+      "highlight": "none"
+    },
+    {
+      "n": 173,
+      "text": "    }",
+      "highlight": "none"
+    },
+    {
+      "n": 174,
+      "text": "    std::cout << \"\\n\";",
+      "highlight": "none"
+    },
+    {
+      "n": 175,
+      "text": "  }",
+      "highlight": "none"
+    },
+    {
+      "n": 176,
+      "text": "",
+      "highlight": "none"
+    },
+    {
+      "n": 177,
+      "text": "  // \u2500\u2500 Error 8: Undeclared variable \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500",
+      "highlight": "none"
+    },
+    {
+      "n": 178,
+      "text": "",
+      "highlight": "none"
+    },
+    {
+      "n": 179,
+      "text": "  int main() {",
+      "highlight": "none"
+    },
+    {
+      "n": 180,
+      "text": "    printHeader(\"Self Healing Compiler Test\");",
+      "highlight": "none"
+    },
+    {
+      "n": 181,
+      "text": "",
+      "highlight": "none"
+    },
+    {
+      "n": 182,
+      "text": "    auto w = 999;",
+      "highlight": "inserted"
+    },
+    {
+      "n": 183,
+      "text": "    w = 999;",
+      "highlight": "none"
+    },
+    {
+      "n": 184,
+      "text": "",
+      "highlight": "none"
+    },
+    {
+      "n": 185,
+      "text": "    int a = 10;",
+      "highlight": "none"
+    },
+    {
+      "n": 186,
+      "text": "    int b = 0;",
+      "highlight": "none"
+    },
+    {
+      "n": 187,
+      "text": "",
+      "highlight": "none"
+    },
+    {
+      "n": 188,
+      "text": "    printHeader(\"Division\");",
+      "highlight": "none"
+    },
+    {
+      "n": 189,
+      "text": "    divide(a, b);",
+      "highlight": "none"
+    },
+    {
+      "n": 190,
+      "text": "",
+      "highlight": "none"
+    },
+    {
+      "n": 191,
+      "text": "    printHeader(\"Numbers\");",
+      "highlight": "none"
+    },
+    {
+      "n": 192,
+      "text": "    printNumbers();",
+      "highlight": "none"
+    },
+    {
+      "n": 193,
+      "text": "",
+      "highlight": "none"
+    },
+    {
+      "n": 194,
+      "text": "    printHeader(\"Calculate\");",
+      "highlight": "none"
+    },
+    {
+      "n": 195,
+      "text": "    int res = calculate(5);",
+      "highlight": "none"
+    },
+    {
+      "n": 196,
+      "text": "    std::cout << \"Result: \" << res << \"\\n\";",
+      "highlight": "none"
+    },
+    {
+      "n": 197,
+      "text": "",
+      "highlight": "none"
+    },
+    {
+      "n": 198,
+      "text": "    printHeader(\"Input\");",
+      "highlight": "none"
+    },
+    {
+      "n": 199,
+      "text": "    processInput();",
+      "highlight": "none"
+    },
+    {
+      "n": 200,
+      "text": "",
+      "highlight": "none"
+    },
+    {
+      "n": 201,
+      "text": "    printHeader(\"Check\");",
+      "highlight": "none"
+    },
+    {
+      "n": 202,
+      "text": "    checkValue();",
+      "highlight": "none"
+    },
+    {
+      "n": 203,
+      "text": "",
+      "highlight": "none"
+    },
+    {
+      "n": 204,
+      "text": "    printHeader(\"Message\");",
+      "highlight": "none"
+    },
+    {
+      "n": 205,
+      "text": "    printMessage();",
+      "highlight": "none"
+    },
+    {
+      "n": 206,
+      "text": "",
+      "highlight": "none"
+    },
+    {
+      "n": 207,
+      "text": "    printHeader(\"Array\");",
+      "highlight": "none"
+    },
+    {
+      "n": 208,
+      "text": "    arrayOps();",
+      "highlight": "none"
+    },
+    {
+      "n": 209,
+      "text": "",
+      "highlight": "none"
+    },
+    {
+      "n": 210,
+      "text": "    printHeader(\"String\");",
+      "highlight": "none"
+    },
+    {
+      "n": 211,
+      "text": "    stringOps();",
+      "highlight": "none"
+    },
+    {
+      "n": 212,
+      "text": "",
+      "highlight": "none"
+    },
+    {
+      "n": 213,
+      "text": "    printHeader(\"Loop\");",
+      "highlight": "none"
+    },
+    {
+      "n": 214,
+      "text": "    loopOps();",
+      "highlight": "none"
+    },
+    {
+      "n": 215,
+      "text": "",
+      "highlight": "none"
+    },
+    {
+      "n": 216,
+      "text": "    std::cout << \"Add: \" << add(3, 4) << \"\\n\";",
+      "highlight": "none"
+    },
+    {
+      "n": 217,
+      "text": "    std::cout << \"Multiply: \" << multiply(6, 7) << \"\\n\";",
+      "highlight": "none"
+    },
+    {
+      "n": 218,
+      "text": "    std::cout << \"Modulo: \" << modulo(10, 3) << \"\\n\";",
+      "highlight": "none"
+    },
+    {
+      "n": 219,
+      "text": "",
+      "highlight": "none"
+    },
+    {
+      "n": 220,
+      "text": "    return 0;",
+      "highlight": "none"
+    },
+    {
+      "n": 221,
+      "text": "  }",
+      "highlight": "none"
+    }
+  ],
+  "summary": {
+    "errors": 3,
+    "fixed": 3,
+    "inserted": 2,
+    "deleted": 0
+  }
+}

@@ -537690,5 +537690,41 @@
     "explanation": "What happened:\n Using the result of an assignment as a condition without parentheses [-Wparentheses].\n\nWhy it happened:\n This may be a warning treated as an error, a platform-specific issue, or an uncommon language rule violation.\n\nHow to fix it:\n Read the full compiler message carefully and check the indicated line for the root cause.\n\nThis error occurred inside a IfStmt statement.",
     "suggestion": "Read the compiler message carefully and correct the highlighted code.",
     "confidence": 0.6065609957226428
+  },
+  {
+    "message": "function definition is not allowed here",
+    "raw_message": "function definition is not allowed here",
+    "category": "other",
+    "ast_node": null,
+    "explanation": "What happened:\n Function definition is not allowed here.\n\nWhy it happened:\n This may be a warning treated as an error, a platform-specific issue, or an uncommon language rule violation.\n\nHow to fix it:\n Read the full compiler message carefully and check the indicated line for the root cause.",
+    "suggestion": "Read the compiler message carefully and correct the highlighted code.",
+    "confidence": 0.6924897974322948
+  },
+  {
+    "message": "expected statement terminator after namespace name",
+    "raw_message": "expected ';' after namespace name",
+    "category": "syntax_error",
+    "ast_node": "UsingDirectiveDecl",
+    "explanation": "What happened:\n The compiler expected a ';' after namespace name.\n\nWhy it happened:\n C++ has strict syntax rules. A missing semicolon, bracket, or parenthesis causes the parser to lose track of where one statement ends and another begins.\n\nHow to fix it:\n Check the line reported and the line just before it. Look for a missing ';', unmatched '(' or '{', or a stray character.\n\nThis error occurred inside a UsingDirectiveDecl statement.",
+    "suggestion": "Fix the syntax error near the reported location.",
+    "confidence": 0.8053049317857435
+  },
+  {
+    "message": "Security Error: Malicious command injection or forbidden system call detected.",
+    "raw_message": "Security Error: Malicious command injection or forbidden system call detected.",
+    "category": "other",
+    "ast_node": "FunctionDecl",
+    "explanation": "What happened:\n Security Error: Malicious command injection or forbidden system call detected.\n\nWhy it happened:\n This may be a warning treated as an error, a platform-specific issue, or an uncommon language rule violation.\n\nHow to fix it:\n Read the full compiler message carefully and check the indicated line for the root cause.\n\nThis error occurred inside a FunctionDecl statement.",
+    "suggestion": "Read the compiler message carefully and correct the highlighted code.",
+    "confidence": 0.7244986225805475
+  },
+  {
+    "message": "identifier will always overflow; destination buffer has size 20, but size argument is 100 [-Wfortify-source]",
+    "raw_message": "'memcpy' will always overflow; destination buffer has size 20, but size argument is 100 [-Wfortify-source]",
+    "category": "other",
+    "ast_node": "CallExpr",
+    "explanation": "What happened:\n 'memcpy' will always overflow; destination buffer has size 20, but size argument is 100 [-Wfortify-source].\n\nWhy it happened:\n This may be a warning treated as an error, a platform-specific issue, or an uncommon language rule violation.\n\nHow to fix it:\n Read the full compiler message carefully and check the indicated line for the root cause.\n\nThis error occurred inside a CallExpr statement.",
+    "suggestion": "Read the compiler message carefully and correct the highlighted code.",
+    "confidence": 0.970098802450044
   }
 ]

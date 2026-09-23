@@ -181,6 +181,9 @@ class ErrorClassifier:
             return None, 0.0
 
         lowered = message.lower()
+        if "a function-definition is not allowed here" in lowered:
+            return "missing_closing_brace", 1.0
+            
         if any(phrase in lowered for phrase in (
             "used uninitialized",
             "may be used uninitialized",
