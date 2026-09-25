@@ -88,10 +88,12 @@ Evaluated across vulnerable targets, safe decoy patterns, and clean baseline fil
 | **CWE-476** (Null Dereference) | 3 | 0 | **0%** | Fails on struct dereferences and function return nulls |
 
 ### C. Auto-Healer (Full Benchmark Run on Isolated Copies)
-* **Attempted:** 48 error files
-* **Compiled Clean (Healed):** 17 (**35.4%** success rate)
-* **Gave Up:** 26 (**54.2%**)
-* **Crashed:** 0 (**0%**)
+* **Attempted:** 48 error files total:
+  - **Compiled Clean (Healed):** 17 (**35.4%** success rate)
+  - **Gave Up:** 26 (**54.2%**)
+  - **No Errors Parsed:** 5 (**10.4%**) — all 5 files in `linker_errors/` (`lk01`–`lk05`) where `error_parser.py` extracted 0 errors due to lack of linker regex support, leaving no errors for the healer to attempt fixing.
+  - **Crashed:** 0 (**0%**)
+* **Accounted Total:** $17 + 26 + 5 + 0 = 48$ attempted error files.
 * *Analysis:* Simple syntax errors (missing semicolons/brackets) heal reliably when correctly classified. When the classifier misidentifies undeclared variables as `missing_include`, the healer attempts invalid `#include` injection and exhausts retry budgets.
 
 ### D. Offline Training Pipeline Data Leak Audit

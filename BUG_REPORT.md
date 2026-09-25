@@ -248,6 +248,16 @@ suggestions, or expand the common_errors glossary significantly.
 > **Full-Benchmark Denominators Reconciled:**  
 > - **Recall Denominator (15 vulnerable files):** The benchmark harness evaluates security across *all* 78 files. 12 files in `benchmark/security/` + 3 multi-error files with security flaws in `benchmark/multi_error/` (`me02` CWE-415, `me03` CWE-416, `me04` CWE-190) = **15 total vulnerable files** (7 TP / 15 = 46.7% recall).
 > - **False-Positive Denominator (12 clean/decoy files):** Evaluated against the 8 files in `benchmark/clean/` + the 4 decoys in `benchmark/security/` = **12 clean/decoy files** (1 FP / 12 = 8.3% FP rate).
+>
+> ### 0%-Recall CWE Analysis: "Compile-Gate Bug" vs "No Detection Logic"
+> Every 0%-recall CWE (190, 415, 457, 476) was audited to verify whether instances compile cleanly outside `multi_error/` and why detection failed:
+>
+> | CWE ID & Class | Instances in `benchmark/security/` (Clean Compile, Exit 0) | Instances in `benchmark/multi_error/` (Compile Error, Exit 1) | Root Failure Category | Week 4 Fix Separation |
+> |---|---|---|---|---|
+> | **CWE-476**<br>(Null Dereference) | `sec07` (direct deref: `*p`),<br>`sec08` (struct member: `n->val`),<br>`sec09` (func return: `get_null()->val`)<br>*(All 3 exit 0 — not blocked by compiler)* | *None* | **100% Missing Detection Logic** | Zero source-level AST/regex scanning exists in `security_analyzer.py`; only a passive compiler warning regex that Apple Clang never triggers. Requires dedicated AST pointer-state tracker. |
+> | **CWE-415**<br>(Double Free) | `sec06_double_free.cpp`<br>*(Exits 0 — not blocked by compiler)* | `me02_redef_and_security.cpp`<br>*(Blocked by `error: redefinition of 'x'`)* | **Defective Logic (sec06)** +<br>**Compile-Gated (me02)** | In `sec06`, line 476 `freed_vars[name] = line_no` overwrites the dictionary *before* checking `line_no != freed_line` on line 479, making consecutive deletes undetected; also lacks `free()` double-free tracking. `me02` requires pipeline compile-gate removal. |
+> | **CWE-190**<br>(Integer Overflow) | `sec10_integer_overflow.cpp`<br>*(Exits 0 — not blocked by compiler)* | `me04_name_and_overflow.cpp`<br>*(Blocked by `error: use of undeclared identifier 'y'`)* | **Inadequate Single-Line Regex (sec10)** +<br>**Compile-Gated (me04)** | Line 456 regex requires `INT_MAX` and arithmetic operator `+` on the *exact same line*. In `sec10`, declaration is on line 5 and `x = x + 1` is on line 6. Needs variable tracking across lines. |
+> | **CWE-457**<br>(Uninitialized Var) | `sec11_uninit_use.cpp`<br>*(Exits 0 — not blocked by compiler)* | *None* | **100% Missing Detection Logic** | No source-level detection logic exists. Relies solely on compiler warning diagnostics, which Apple Clang default invocation does not emit. |
 
 ### Bug 4.1 · P0 · Null pointer dereference completely undetected
 
@@ -378,20 +388,28 @@ GUI-only eliminates it from batch processing, CI pipelines, and headless environ
 
 ### Bug 5.2 · P1 · Healer success rate is 35.4% (17/48)
 
-**What happens:** Of 48 error files in the benchmark, the auto-healer successfully
-compiled only 17. It gave up on 26 files and couldn't parse errors on 5 (linker errors).
+**What happens:** Of 48 error files in the benchmark, the auto-healer's outcomes are:
+- **Compiled Clean (`compiled_clean`):** 17 (35.4% success rate)
+- **Gave Up (`gave_up`):** 26 (54.2%) — exceeded retry limit or heuristic fix failed
+- **No Errors Parsed (`no_errors_parsed`):** 5 (10.4%) — all 5 files in `benchmark/linker_errors/` (`lk01`–`lk05`)
+- **Crashed (`crashed`):** 0 (0.0%)
+*Total Accounted:* $17 + 26 + 5 + 0 = 48$ attempted error files.
 
-**Evidence by category:**
-| Category | Attempted | Compiled Clean | Gave Up | Success Rate |
-|----------|-----------|----------------|---------|-------------|
-| syntax | 10 | 7 | 3 | 70% |
-| name_resolution | 8 | 3 | 5 | 38% |
-| type_errors | 8 | 1 | 7 | 13% |
-| return_type | 4 | 1 | 3 | 25% |
-| redefinition | 4 | 1 | 3 | 25% |
-| missing_include | 4 | 3 | 1 | 75% |
-| linker_errors | 5 | 0 | 0 (no_errors_parsed) | 0% |
-| multi_error | 5 | 3 | 2 | 60% |
+> **Reconciliation Note on the 5 Missing Files:**  
+> The 5 files not accounted for in "healed vs gave up" are the 5 linker error cases (`lk01`–`lk05`). Because linker diagnostic output (e.g. `Undefined symbols for architecture arm64: "_foo"`) has no `file:line:col: error:` pattern matching `error_parser.py`, `parse_errors()` returns an empty list (`[]`). With 0 parsed errors to act upon, the healer harness cannot generate AST/regex patch candidates, resulting in an immediate `no_errors_parsed` outcome rather than a retry failure.
+
+**Evidence by category (All 48 files accounted for):**
+| Category | Attempted | Compiled Clean | Gave Up | No Errors Parsed | Success Rate |
+|---|:---:|:---:|:---:|:---:|:---:|
+| syntax | 10 | 7 | 3 | 0 | 70.0% |
+| name_resolution | 8 | 3 | 5 | 0 | 37.5% |
+| type_errors | 8 | 1 | 7 | 0 | 12.5% |
+| return_type | 4 | 1 | 3 | 0 | 25.0% |
+| redefinition | 4 | 1 | 3 | 0 | 25.0% |
+| missing_include | 4 | 3 | 1 | 0 | 75.0% |
+| linker_errors | 5 | 0 | 0 | 5 (`no_errors_parsed`) | 0.0% |
+| multi_error | 5 | 3 | 2 | 0 | 60.0% |
+| **Total** | **48** | **17** | **26** | **5** | **35.4%** |
 
 **Where it lives:** [`src/auto_healer.py`](file:///Users/jaisinghsaini/TOACD/cd1/src/auto_healer.py) —
 the `attempt_fix()` dispatcher and individual fix functions.

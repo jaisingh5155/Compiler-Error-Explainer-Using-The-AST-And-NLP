@@ -26,11 +26,12 @@
 #   CWE-78: 1/1 (100%)
 #
 # AUTO-HEALER:
-#   Attempted:      48
-#   compiled_clean:  17
-#   gave_up:         26
-#   crashed:         0
-#   success rate:    35.4%
+#   Attempted:         48
+#   compiled_clean:    17
+#   gave_up:           26
+#   no_errors_parsed:   5
+#   crashed:            0
+#   success rate:      35.4% (17/48)
 #
 # TRAINING DATA MUTATION CHECK:
 #   Size before: 14719358 bytes, MD5: 0239658bf3b6c91064e89dba5e954d30
