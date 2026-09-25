@@ -250,14 +250,26 @@ suggestions, or expand the common_errors glossary significantly.
 > - **False-Positive Denominator (12 clean/decoy files):** Evaluated against the 8 files in `benchmark/clean/` + the 4 decoys in `benchmark/security/` = **12 clean/decoy files** (1 FP / 12 = 8.3% FP rate).
 >
 > ### 0%-Recall CWE Analysis: "Compile-Gate Bug" vs "No Detection Logic"
-> Every 0%-recall CWE (190, 415, 457, 476) was audited to verify whether instances compile cleanly outside `multi_error/` and why detection failed:
+> Every 0%-recall CWE (190, 415, 457, 476) was audited to verify whether its instances in `benchmark/security/` (NOT `multi_error/`) also scored 0% independently:
 >
-> | CWE ID & Class | Instances in `benchmark/security/` (Clean Compile, Exit 0) | Instances in `benchmark/multi_error/` (Compile Error, Exit 1) | Root Failure Category | Week 4 Fix Separation |
-> |---|---|---|---|---|
-> | **CWE-476**<br>(Null Dereference) | `sec07` (direct deref: `*p`),<br>`sec08` (struct member: `n->val`),<br>`sec09` (func return: `get_null()->val`)<br>*(All 3 exit 0 — not blocked by compiler)* | *None* | **100% Missing Detection Logic** | Zero source-level AST/regex scanning exists in `security_analyzer.py`; only a passive compiler warning regex that Apple Clang never triggers. Requires dedicated AST pointer-state tracker. |
-> | **CWE-415**<br>(Double Free) | `sec06_double_free.cpp`<br>*(Exits 0 — not blocked by compiler)* | `me02_redef_and_security.cpp`<br>*(Blocked by `error: redefinition of 'x'`)* | **Defective Logic (sec06)** +<br>**Compile-Gated (me02)** | In `sec06`, line 476 `freed_vars[name] = line_no` overwrites the dictionary *before* checking `line_no != freed_line` on line 479, making consecutive deletes undetected; also lacks `free()` double-free tracking. `me02` requires pipeline compile-gate removal. |
-> | **CWE-190**<br>(Integer Overflow) | `sec10_integer_overflow.cpp`<br>*(Exits 0 — not blocked by compiler)* | `me04_name_and_overflow.cpp`<br>*(Blocked by `error: use of undeclared identifier 'y'`)* | **Inadequate Single-Line Regex (sec10)** +<br>**Compile-Gated (me04)** | Line 456 regex requires `INT_MAX` and arithmetic operator `+` on the *exact same line*. In `sec10`, declaration is on line 5 and `x = x + 1` is on line 6. Needs variable tracking across lines. |
-> | **CWE-457**<br>(Uninitialized Var) | `sec11_uninit_use.cpp`<br>*(Exits 0 — not blocked by compiler)* | *None* | **100% Missing Detection Logic** | No source-level detection logic exists. Relies solely on compiler warning diagnostics, which Apple Clang default invocation does not emit. |
+> | CWE ID & Class | Instances in `benchmark/security/` (Clean Compile, Exit 0) | Instances in `benchmark/multi_error/` (Compile Error, Exit 1) | Independent Score in `security/` | Root Failure Category |
+> |---|---|---|:---:|---|
+> | **CWE-476**<br>(Null Dereference) | `sec07` (direct deref: `*p`),<br>`sec08` (struct member: `n->val`),<br>`sec09` (func return: `get_null()->val`)<br>*(All 3 exit 0 — not blocked by compiler)* | *None* | **0/3 (0%)** | **100% Missing Detection Logic** |
+> | **CWE-415**<br>(Double Free) | `sec06_double_free.cpp`<br>*(Exits 0 — not blocked by compiler)* | `me02_redef_and_security.cpp`<br>*(Blocked by `error: redefinition of 'x'`)* | **0/1 (0%)** | **Defective Logic (sec06)** +<br>**Compile-Gated (me02)** |
+> | **CWE-190**<br>(Integer Overflow) | `sec10_integer_overflow.cpp`<br>*(Exits 0 — not blocked by compiler)* | `me04_name_and_overflow.cpp`<br>*(Blocked by `error: use of undeclared identifier 'y'`)* | **0/1 (0%)** | **Inadequate Single-Line Regex (sec10)** +<br>**Compile-Gated (me04)** |
+> | **CWE-457**<br>(Uninitialized Var) | `sec11_uninit_use.cpp`<br>*(Exits 0 — not blocked by compiler)* | *None* | **0/1 (0%)** | **100% Missing Detection Logic** |
+>
+> **Individual CWE Determinations:**
+> - **CWE-476 (Null Dereference):** All 3 dedicated variants in `benchmark/security/` missed detection independently (0/3, 0%) despite clean compilation (exit 0) because **no detection logic exists for this pattern regardless of gating** (the tool has zero source-level AST/regex pointer trackers and relies solely on compiler warning diagnostics that Apple Clang never emits).
+> - **CWE-190 (Integer Overflow):** `sec10` in `benchmark/security/` missed detection independently (0/1, 0%) despite clean compilation (exit 0) because **no detection logic exists for multi-line integer overflow patterns regardless of gating** (the line 456 regex requires `INT_MAX` and arithmetic operators on the same line), whereas `me04` in `multi_error/` was **blocked by the compile-gate (Bug 4.1)**.
+> - **CWE-457 (Uninitialized Variable Use):** `sec11` in `benchmark/security/` missed detection independently (0/1, 0%) despite clean compilation (exit 0) because **no detection logic exists for this pattern regardless of gating** (the scanner completely lacks a source-level uninitialized read detector).
+> - **CWE-415 (Double Free):** `sec06` in `benchmark/security/` missed detection independently (0/1, 0%) despite clean compilation (exit 0) because **no functional detection logic exists for consecutive deletes regardless of gating** (line 476 overwrites `freed_vars[name]` before checking `line_no != freed_line`, preventing double-delete matches, and zero tracking exists for `free()`), whereas `me02` in `multi_error/` was **blocked by the compile-gate (Bug 4.1)**.
+> - **CWE-416 (Use-After-Free) Clarification:** CWE-416 scored 100% recall (2/2) because `sec05` compiled cleanly and was detected, while `me03` compiled cleanly due to `<iostream>` transitively including `<vector>` on Apple Clang; however, on true compile failures like legacy `test_cases/tc16.cpp` or `me02`, upstream compile errors halt the pipeline and completely conceal vulnerabilities, confirming that **Bug 4.1 (the compile-gate) is a real and separate architectural cause** from missing detector rules.
+>
+> **Implications for Week 4 Fix Strategy:**  
+> Week 4 requires **both** fixes:
+> 1. Fix the compile-gate architectural bug (Bug 4.1) so files with syntax/type errors still undergo AST/source security analysis.
+> 2. Implement new and corrected source-level detection rules for CWE-476, CWE-415, CWE-190, and CWE-457.
 
 ### Bug 4.1 · P0 · Null pointer dereference completely undetected
 

@@ -75,17 +75,25 @@ Evaluated across vulnerable targets, safe decoy patterns, and clean baseline fil
 * **False Positive Rate on Clean & Decoy Files:** **8.3%** (`1 / 12`)
 
 #### Breakdown by CWE (15 Vulnerable Benchmark Cases Total):
-| Vulnerability Class | Benchmark Cases | Detected | Recall | Scanner Bottleneck |
-|---|:---:|:---:|:---:|---|
-| **CWE-78** (Command Injection) | 1 | 1 | **100%** | Regex matches `system()` |
-| **CWE-120** (Buffer Overflow) | 2 | 2 | **100%** | Regex matches `strcpy`/`gets` |
-| **CWE-134** (Format String) | 1 | 1 | **100%** | Regex matches variable format strings |
-| **CWE-190** (Integer Overflow) | 2 | 0 | **0%** | CLI does not invoke `_pre_scan()` |
-| **CWE-401** (Memory Leak) | 1 | 1 | **100%** | Detected missing `delete`/`free` |
-| **CWE-415** (Double Free) | 2 | 0 | **0%** | AST/Regex lacks tracking for repeated `free()` |
-| **CWE-416** (Use-After-Free) | 2 | 2 | **100%** | Regex flags pointer access post `free()` |
-| **CWE-457** (Uninitialized Variable) | 1 | 0 | **0%** | Compiler warning not captured by AST analyzer |
-| **CWE-476** (Null Dereference) | 3 | 0 | **0%** | Fails on struct dereferences and function return nulls |
+| Vulnerability Class | Total Cases | Detected | Recall | Independent Score in `security/` | Failure Mechanism |
+|---|:---:|:---:|:---:|:---:|---|
+| **CWE-78** (Command Injection) | 1 | 1 | **100%** | 1/1 (100%) | Regex matches `system()` |
+| **CWE-120** (Buffer Overflow) | 2 | 2 | **100%** | 2/2 (100%) | Regex matches `strcpy`/`gets` |
+| **CWE-134** (Format String) | 1 | 1 | **100%** | 1/1 (100%) | Regex matches variable format strings |
+| **CWE-190** (Integer Overflow) | 2 | 0 | **0%** | **0/1 (0%)** | Inadequate intra-line regex (`sec10`) + Compile-gated (`me04`) |
+| **CWE-401** (Memory Leak) | 1 | 1 | **100%** | 1/1 (100%) | Detected missing `delete`/`free` |
+| **CWE-415** (Double Free) | 2 | 0 | **0%** | **0/1 (0%)** | Defective dictionary update logic (`sec06`) + Compile-gated (`me02`) |
+| **CWE-416** (Use-After-Free) | 2 | 2 | **100%** | 1/1 (100%) | Caught in both `sec05` and `me03` (clean compile via libc++ transitive include) |
+| **CWE-457** (Uninitialized Variable) | 1 | 0 | **0%** | **0/1 (0%)** | 100% missing source-level detection logic (`sec11`) |
+| **CWE-476** (Null Dereference) | 3 | 0 | **0%** | **0/3 (0%)** | 100% missing source-level detection logic (`sec07`, `sec08`, `sec09`) |
+
+**Zero-Recall CWE Root Cause Audit:**
+- **CWE-476 (Null Dereference):** All 3 dedicated variants in `benchmark/security/` missed detection independently (0/3, 0%) despite clean compilation (exit 0) because **no detection logic exists for this pattern regardless of gating**.
+- **CWE-190 (Integer Overflow):** `sec10` in `benchmark/security/` missed detection independently (0/1, 0%) despite clean compilation (exit 0) because **no detection logic exists for multi-line integer overflow patterns regardless of gating**, whereas `me04` in `multi_error/` was **blocked by the compile-gate (Bug 4.1)**.
+- **CWE-457 (Uninitialized Variable Use):** `sec11` in `benchmark/security/` missed detection independently (0/1, 0%) despite clean compilation (exit 0) because **no detection logic exists for this pattern regardless of gating**.
+- **CWE-415 (Double Free):** `sec06` in `benchmark/security/` missed detection independently (0/1, 0%) despite clean compilation (exit 0) because **no functional detection logic exists for consecutive deletes regardless of gating** (line 476 overwrites `freed_vars[name]` before checking `line_no != freed_line`), whereas `me02` in `multi_error/` was **blocked by the compile-gate (Bug 4.1)**.
+- **CWE-416 (Use-After-Free) Separation:** CWE-416 scored 100% recall (2/2) because `sec05` and `me03` compiled cleanly and were detected; however, when upstream compilation fails on true compile errors (e.g. `me02`, legacy `tc16`), the compile-gate aborts security scanning, proving that **Bug 4.1 (the compile-gate) is a real and separate architectural cause** from missing detector rules.
+- **Week 4 Implication:** Week 4 requires **two separate fixes**: (1) removing the compilation gate, and (2) implementing source-level detection logic for CWE-476, 415, 190, and 457.
 
 ### C. Auto-Healer (Full Benchmark Run on Isolated Copies)
 * **Attempted:** 48 error files total:
