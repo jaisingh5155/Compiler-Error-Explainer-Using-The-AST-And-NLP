@@ -93,8 +93,39 @@ def print_error(error, verbose=False):
 def main():
     args=parse_arguments()
     output=run_cpp_compiler(args.source_file)
+    # Bug 4.1 Fix: Decouple security scan from compilation success/failure.
+    # Security findings are collected independently on source text/AST regardless of compiler errors.
+    errors = []
+    if output:
+        errors = parse_errors(output)
+        try:
+            ast_text = extract_ast(args.source_file)
+        except Exception:
+            ast_text = None
+
+        for e in errors:
+            if e.line and ast_text:
+                e.ast_node = extract_node_near_line(ast_text, e.line)
+            else:
+                e.ast_node = None
+
+            try:
+                enrich_error(e)
+                log_example(e)
+            except Exception:
+                pass
+
+    security_findings = analyze(args.source_file, errors)
+    for e in errors:
+        if not getattr(e, "security_findings", None):
+            e.security_findings = [
+                finding for finding in security_findings
+                if finding.source == "compiler_diagnostic"
+                and finding.file == (e.file or "")
+                and finding.line == e.line
+            ]
+
     if not output:
-        security_findings = analyze(args.source_file, [])
         if args.json:
             print(json.dumps({
                 "status": "success",
@@ -107,29 +138,6 @@ def main():
             print()
             print(format_security_report(security_findings), end="")
         return 0
-
-    errors=parse_errors(output)
-    ast_text=extract_ast(args.source_file)
-
-    for e in errors:
-
-        if e.line:
-            e.ast_node=extract_node_near_line(ast_text, e.line)
-        else:
-            e.ast_node=None
-
-        enrich_error(e)
-        log_example(e)
-
-    security_findings = analyze(args.source_file, errors)
-    for e in errors:
-        if not getattr(e, "security_findings", None):
-            e.security_findings = [
-                finding for finding in security_findings
-                if finding.source == "compiler_diagnostic"
-                and finding.file == (e.file or "")
-                and finding.line == e.line
-            ]
 
     visible_errors = [e for e in errors if not _is_security_only_diagnostic(e)]
     visible_error_count = sum(1 for e in visible_errors if e.error_type == "error")
