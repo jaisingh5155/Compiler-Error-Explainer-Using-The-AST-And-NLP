@@ -6,8 +6,13 @@ from error_normalizer import normalize_error
 DATA_DIR=os.path.join(os.path.dirname(os.path.dirname(__file__)),"data")
 DATA_FILE=os.path.join(DATA_DIR,"training_data.json")
 
-def log_example(error)->None:
-    os.makedirs(DATA_DIR,exist_ok=True)
+def log_example(error, enabled: bool = False) -> None:
+    # Bug 7.1: Disable automatic write-back of tool's own predictions into data/training_data.json.
+    # Gated behind an explicit opt-in flag / environment variable that defaults to OFF.
+    if not enabled and os.environ.get("ENABLE_DATASET_LOGGING") != "1":
+        return
+
+    os.makedirs(DATA_DIR, exist_ok=True)
     
     # Normalize: use abstract semantic form for dataset storage
     dataset_message, _ = normalize_error(error.message)

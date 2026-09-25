@@ -36,6 +36,7 @@ def parse_arguments():
     parser.add_argument("-j","--json",action="store_true",help="print output in JSON format")
     parser.add_argument("-v","--verbose",action="store_true",help="show detailed context")
     parser.add_argument("-c","--context",type=int, default=2,help="number of context lines")
+    parser.add_argument("--log-training",action="store_true",default=False,help="opt-in flag to log predictions into training_data.json")
 
     return parser.parse_args()
 
@@ -111,7 +112,7 @@ def main():
 
             try:
                 enrich_error(e)
-                log_example(e)
+                log_example(e, enabled=args.log_training)
             except Exception:
                 pass
 
