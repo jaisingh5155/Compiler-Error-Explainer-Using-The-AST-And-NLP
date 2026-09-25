@@ -1,5 +1,6 @@
 import json
 import os
+import re
 from collections import Counter
 from typing import Optional, Tuple, List
 
@@ -91,6 +92,64 @@ def _check_imbalance(labels: List[str]) -> dict:
     return dict(counts)
 
 
+def _normalize_clang_dialect(message: str) -> str:
+    """
+    Temporary mitigation for Bug 2.1 (Compiler dialect bias).
+    Maps known Apple Clang diagnostic phrasings to canonical GCC-equivalent wording
+    so the pre-trained GCC-biased TF-IDF model correctly classifies them.
+    NOTE: This is a contained mitigation for Week 3; the full architectural fix is
+    the dual-dialect dataset rebuild and retrain in Week 6.
+    """
+    if not message:
+        return message
+
+    msg = message
+
+    # 1. Undeclared identifiers: Clang -> GCC
+    # "use of undeclared identifier 'x'" -> "'x' was not declared in this scope"
+    m = re.search(r"use of undeclared identifier\s+([`']?[^`';\s]+[`']?)", msg, re.IGNORECASE)
+    if m:
+        ident = m.group(1).strip("`'")
+        return f"'{ident}' was not declared in this scope"
+
+    # 2. Initialization type mismatch: Clang -> GCC
+    # "cannot initialize a variable of type 'char *' with an lvalue/rvalue of type 'int'" -> "invalid conversion from 'int' to 'char*'"
+    m = re.search(r"cannot initialize (?:a variable of )?type\s+['`]([^'`]+)['`]\s+with an? (?:lvalue|rvalue) of type\s+['`]([^'`]+)['`]", msg, re.IGNORECASE)
+    if m:
+        target_t, src_t = m.group(1), m.group(2)
+        return f"invalid conversion from '{src_t}' to '{target_t}'"
+
+    # 3. Conversion failure: Clang -> GCC
+    # "no viable conversion from 'bool' to 'Point'" -> "cannot convert 'bool' to 'Point' in initialization"
+    m = re.search(r"no viable conversion from\s+['`]([^'`]+)['`]\s+to\s+['`]([^'`]+)['`]", msg, re.IGNORECASE)
+    if m:
+        src_t, target_t = m.group(1), m.group(2)
+        return f"cannot convert '{src_t}' to '{target_t}' in initialization"
+
+    # 4. Incompatible assignment: Clang -> GCC
+    # "assigning to 'int *' from incompatible type 'int'" -> "incompatible types in assignment of 'int' to 'int*'"
+    m = re.search(r"assigning to\s+['`]([^'`]+)['`]\s+from incompatible type\s+['`]([^'`]+)['`]", msg, re.IGNORECASE)
+    if m:
+        target_t, src_t = m.group(1), m.group(2)
+        return f"incompatible types in assignment of '{src_t}' to '{target_t}'"
+
+    # 5. Non-pointer dereference: Clang -> GCC
+    # "indirection requires pointer operand ('int' invalid)" -> "invalid type argument of unary '*' (have 'int')"
+    m = re.search(r"indirection requires pointer operand\s+\(['`]([^'`]+)['`]\s+invalid\)", msg, re.IGNORECASE)
+    if m:
+        t = m.group(1)
+        return f"invalid type argument of unary '*' (have '{t}')"
+
+    # 6. Binary expression operands mismatch: Clang -> GCC
+    # "invalid operands to binary expression ('int' and 'std::string')" -> "no match for operator with types 'int' and 'std::string'"
+    m = re.search(r"invalid operands to binary expression\s+\(['`]([^'`]+)['`]\s+and\s+['`]([^'`]+)['`]\)", msg, re.IGNORECASE)
+    if m:
+        t1, t2 = m.group(1), m.group(2)
+        return f"no match for operator with types '{t1}' and '{t2}'"
+
+    return msg
+
+
 class ErrorClassifier:
     def __init__(
         self,
@@ -179,6 +238,13 @@ class ErrorClassifier:
     def predict(self, message: str, ast_node: str = "") -> Tuple[Optional[str], float]:
         if not message:
             return None, 0.0
+
+        # Bug 2.1: Lightweight Clang-to-GCC dialect normalization mitigation.
+        # Maps known Apple Clang diagnostic phrasings to canonical GCC-equivalent wording
+        # so the pre-trained GCC-biased TF-IDF model correctly classifies them.
+        # NOTE: This is a contained mitigation for Week 3; the full architectural fix
+        # is the dual-dialect dataset rebuild and retrain in Week 6.
+        message = _normalize_clang_dialect(message)
 
         lowered = message.lower()
         if "a function-definition is not allowed here" in lowered:
