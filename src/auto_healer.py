@@ -51,12 +51,87 @@ _STD_SYMBOLS = {
 }
 
 _CPP_KEYWORDS = [
-    "int", "float", "double", "char", "bool", "void", "return", "if", "else",
-    "while", "for", "do", "switch", "case", "break", "continue", "class",
-    "struct", "public", "private", "protected", "new", "delete", "true",
-    "false", "const", "static", "namespace", "include", "template", "virtual",
+    "alignas", "alignof", "asm", "auto", "bool", "break", "case", "catch",
+    "char", "char16_t", "char32_t", "char8_t", "class", "concept", "const",
+    "const_cast", "consteval", "constexpr", "constinit", "continue", "co_await",
+    "co_return", "co_yield", "decltype", "default", "delete", "do", "double",
+    "dynamic_cast", "else", "enum", "explicit", "export", "extern", "false",
+    "float", "for", "friend", "goto", "if", "inline", "int", "long", "mutable",
+    "namespace", "new", "noexcept", "nullptr", "operator", "private", "protected",
+    "public", "reinterpret_cast", "requires", "return", "short", "signed",
+    "sizeof", "static", "static_assert", "static_cast", "struct", "switch",
+    "template", "this", "thread_local", "throw", "true", "try", "typedef",
+    "typeid", "typename", "union", "unsigned", "using", "virtual", "void",
+    "volatile", "wchar_t", "while",
 ]
 _VALID_KEYWORDS = set(_CPP_KEYWORDS)
+
+
+def _mask_comments_and_strings(line: str) -> str:
+    """
+    Mask contents of string literals, char literals, and comments with spaces,
+    preserving character offsets and column positions.
+    """
+    chars = list(line)
+    in_string = False
+    in_char = False
+    escape = False
+    i = 0
+    n = len(chars)
+    while i < n:
+        c = chars[i]
+        if in_string:
+            chars[i] = " "
+            if escape:
+                escape = False
+            elif c == "\\":
+                escape = True
+            elif c == '"':
+                in_string = False
+            i += 1
+            continue
+        if in_char:
+            chars[i] = " "
+            if escape:
+                escape = False
+            elif c == "\\":
+                escape = True
+            elif c == "'":
+                in_char = False
+            i += 1
+            continue
+        if c == "/" and i + 1 < n and chars[i + 1] == "/":
+            while i < n:
+                if chars[i] not in ("\n", "\r"):
+                    chars[i] = " "
+                i += 1
+            break
+        if c == "/" and i + 1 < n and chars[i + 1] == "*":
+            chars[i] = " "
+            chars[i + 1] = " "
+            i += 2
+            while i < n:
+                if chars[i] == "*" and i + 1 < n and chars[i + 1] == "/":
+                    chars[i] = " "
+                    chars[i + 1] = " "
+                    i += 2
+                    break
+                if chars[i] not in ("\n", "\r"):
+                    chars[i] = " "
+                i += 1
+            continue
+        if c == '"':
+            in_string = True
+            chars[i] = " "
+            i += 1
+            continue
+        if c == "'":
+            in_char = True
+            chars[i] = " "
+            i += 1
+            continue
+        i += 1
+    return "".join(chars)
 
 
 def _build_keyword_variant_map() -> dict[str, str]:
@@ -78,7 +153,7 @@ def _build_keyword_variant_map() -> dict[str, str]:
 _KEYWORD_VARIANTS = _build_keyword_variant_map()
 
 
-def _keyword_edit_distance(a: str, b: str, limit: int = 2) -> int:
+def _keyword_edit_distance(a: str, b: str, limit: int = 1) -> int:
     """Compute a bounded Levenshtein distance."""
     if abs(len(a) - len(b)) > limit:
         return limit + 1
@@ -121,43 +196,56 @@ def _extract_symbol(message: str) -> Optional[str]:
 
 def _fix_keyword_typo(line: str, target_token: Optional[str] = None) -> Optional[str]:
     """
-    Replace a misspelled C++ keyword if the token matches one of the keyword
-    permutation variants or is close by edit distance.
+    Replace a misspelled C++ keyword if the token is within distance 1 of an explicit C++ keyword.
+    Constrained per Bug 5.1:
+      (a) only match against a fixed, explicit list of actual C++ keywords
+      (b) require tight edit distance bound (distance 1, not 2)
+      (c) skip matches inside string literals or comments
+      (d) never match valid identifiers or standard library symbols
     """
     if not target_token:
         return None
     if len(target_token) < 3:
         return None
 
-    for match in re.finditer(r"\b[A-Za-z_]\w*\b", line):
+    # Real keywords, standard library symbols, and common identifiers are never typo candidates
+    if target_token in _VALID_KEYWORDS or target_token in _STD_SYMBOLS or target_token in _SYMBOL_TO_HEADER:
+        return None
+
+    # Strip/mask comments and string literals so tokens inside them are skipped
+    masked_line = _mask_comments_and_strings(line)
+
+    for match in re.finditer(r"\b[A-Za-z_]\w*\b", masked_line):
         token = match.group(0)
         if token != target_token:
             continue
-        # Real keywords are never candidates for healing.
-        if token in _VALID_KEYWORDS:
+
+        # Real keywords or known std identifiers should never be overwritten
+        if token in _VALID_KEYWORDS or token in _STD_SYMBOLS or token in _SYMBOL_TO_HEADER:
             continue
 
+        # Single-swap canonical variant check (Damerau distance 1)
         canonical = _KEYWORD_VARIANTS.get(token)
-        if canonical and canonical != token:
+        if canonical and canonical != token and canonical in _VALID_KEYWORDS:
             return line[:match.start()] + canonical + line[match.end():]
 
+        # Search for keyword match with tight edit distance bound of 1 (NOT 2)
         best_keyword = None
-        best_distance = 3
+        best_distance = 2
         for keyword in _CPP_KEYWORDS:
-            if token == keyword:
+            if token.lower() == keyword.lower():
                 continue
             if token[0].lower() != keyword[0].lower():
                 continue
-            if abs(len(token) - len(keyword)) > 2:
+            if abs(len(token) - len(keyword)) > 1:
                 continue
-            distance = _keyword_edit_distance(token.lower(), keyword.lower(), limit=2)
-            if distance < best_distance:
+            distance = _keyword_edit_distance(token.lower(), keyword.lower(), limit=1)
+            if distance <= 1:
                 best_distance = distance
                 best_keyword = keyword
-                if distance == 1:
-                    break
+                break
 
-        if best_keyword is not None and best_distance <= 2:
+        if best_keyword is not None and best_distance <= 1:
             return line[:match.start()] + best_keyword + line[match.end():]
     return None
 

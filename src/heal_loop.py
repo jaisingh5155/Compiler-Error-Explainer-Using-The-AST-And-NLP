@@ -302,7 +302,7 @@ class HealWorker(QThread):
 
             self.attempt_started.emit(attempt, target)
 
-            error_key = target.get("message")
+            error_key = (target.get("message"), target.get("line"))
             if error_key in seen_errors:
                 if attempt_tracker: attempt_tracker.stop()
                 self._attach_failure_suggestion(history, target, source)
@@ -331,13 +331,46 @@ class HealWorker(QThread):
             fixed_line_nos = [d.line_no_new for d in diff if d.kind == "+" and d.line_no_new is not None]
             self.lines_fixed.emit(fixed_line_nos)
 
-            history.append({
-                "attempt": attempt, "error": target, "patch": patched, "diff_html": diff_html
-            })
+            # Bug 5.1: Create backup before writing patch, and rollback if compilation gets worse
+            backup_path = self.file_path + ".bak"
+            try:
+                with open(backup_path, "w", encoding="utf-8") as bf:
+                    bf.write(source)
+            except Exception:
+                pass
 
             # 6. Save
             with open(self.file_path, "w", encoding="utf-8") as f:
                 f.write(patched)
+
+            # Check if compilation got WORSE (more errors than before)
+            post_errors, _ = _compile(self.file_path)
+            pre_error_count = sum(1 for e in all_errors if e.get("type") == "error")
+            post_error_count = sum(1 for e in post_errors if e.get("type") == "error")
+
+            if pre_error_count > 0 and post_error_count > pre_error_count:
+                # Rollback to pre-patch state
+                with open(self.file_path, "w", encoding="utf-8") as f:
+                    f.write(source)
+                try:
+                    if os.path.exists(backup_path):
+                        os.remove(backup_path)
+                except Exception:
+                    pass
+                history.append({
+                    "attempt": attempt, "error": target, "patch": None, "reason": "rollback_compilation_worse"
+                })
+                continue
+
+            try:
+                if os.path.exists(backup_path):
+                    os.remove(backup_path)
+            except Exception:
+                pass
+
+            history.append({
+                "attempt": attempt, "error": target, "patch": patched, "diff_html": diff_html
+            })
             source = patched
 
             # Telemetry logic
