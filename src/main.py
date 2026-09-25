@@ -139,7 +139,7 @@ def main():
 
     if args.json:
         result={
-            "status": "error" if visible_errors else "success",
+            "status": "error" if visible_error_count > 0 else "success",
             "file": args.source_file,
             "error_count": visible_error_count,
             "warning_count": visible_warning_count,
