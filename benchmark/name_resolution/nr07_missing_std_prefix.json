@@ -1,0 +1,8 @@
+{
+  "expected_status": "error",
+  "expected_category": "name_resolution",
+  "expected_line": 3,
+  "cwe": null,
+  "expected_security_verdict": "clean",
+  "notes": "cout/endl used without using namespace std or std:: prefix"
+}

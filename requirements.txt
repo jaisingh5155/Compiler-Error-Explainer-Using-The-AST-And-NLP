@@ -1,4 +1,13 @@
-PyQt6>=6.4.0
-scikit-learn>=1.2.0
-joblib>=1.2.0
-codecarbon>=2.3.0
+# Pinned versions — Week 1 baseline (2026-09-25)
+# Previous unpinned state:
+#   PyQt6>=6.4.0
+#   scikit-learn>=1.2.0
+#   joblib>=1.2.0
+#   codecarbon>=2.3.0
+# numpy was not listed but is required by scikit-learn.
+
+PyQt6==6.11.0
+scikit-learn==1.9.1
+joblib==1.6.0
+numpy==2.5.3
+codecarbon==3.3.1

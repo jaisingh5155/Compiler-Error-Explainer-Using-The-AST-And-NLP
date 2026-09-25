@@ -1,0 +1,8 @@
+{
+  "expected_status": "error",
+  "expected_category": "missing_include",
+  "expected_line": 4,
+  "cwe": null,
+  "expected_security_verdict": "clean",
+  "notes": "vector used without #include <vector>"
+}

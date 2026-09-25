@@ -1,0 +1,8 @@
+{
+  "expected_status": "error",
+  "expected_category": "missing_include",
+  "expected_line": 4,
+  "cwe": "CWE-416",
+  "expected_security_verdict": "vulnerable",
+  "notes": "missing #include <vector> AND use-after-free; does security scanner find UaF when compile fails?"
+}

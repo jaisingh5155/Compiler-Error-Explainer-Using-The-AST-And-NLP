@@ -537726,5 +537726,149 @@
     "explanation": "What happened:\n 'memcpy' will always overflow; destination buffer has size 20, but size argument is 100 [-Wfortify-source].\n\nWhy it happened:\n This may be a warning treated as an error, a platform-specific issue, or an uncommon language rule violation.\n\nHow to fix it:\n Read the full compiler message carefully and check the indicated line for the root cause.\n\nThis error occurred inside a CallExpr statement.",
     "suggestion": "Read the compiler message carefully and correct the highlighted code.",
     "confidence": 0.970098802450044
+  },
+  {
+    "message": "use of undeclared identifier identifier; did you mean 'std::endl'?",
+    "raw_message": "use of undeclared identifier 'endl'; did you mean 'std::endl'?",
+    "category": "name_resolution",
+    "ast_node": "CXXOperatorCallExpr",
+    "explanation": "What happened:\n The identifier 'endl' was used before it was declared.\n\nWhy it happened:\n In C++, every variable, function, or class must be declared before it is used. It may also be in a different scope or namespace.\n\nHow to fix it:\n Declare the variable before using it, check your spelling, or add the missing #include or 'using namespace std;'.\n\nThis error occurred inside a CXXOperatorCallExpr statement.",
+    "suggestion": "Declare the identifier before use or add the missing #include.",
+    "confidence": 0.9866397140816784
+  },
+  {
+    "message": "cannot initialize return object of type type with an lvalue of type 'const char[6]'",
+    "raw_message": "cannot initialize return object of type 'int' with an lvalue of type 'const char[6]'",
+    "category": "return_type_error",
+    "ast_node": "ReturnStmt",
+    "explanation": "What happened:\n The return value does not match the function's declared return type.\n\nWhy it happened:\n In C++, non-void functions must return a value that matches their declared return type. main() must always return int.\n\nHow to fix it:\n Add a return statement with the correct type. For main(), use 'return 0;' at the end.\n\nThis error occurred inside a ReturnStmt statement.",
+    "suggestion": "Add a return statement matching the function's declared return type.",
+    "confidence": 1.0
+  },
+  {
+    "message": "identifier must return type",
+    "raw_message": "'main' must return 'int'",
+    "category": "return_type_error",
+    "ast_node": "FunctionDecl",
+    "explanation": "What happened:\n 'main' must return 'int'.\n\nWhy it happened:\n In C++, non-void functions must return a value that matches their declared return type. main() must always return int.\n\nHow to fix it:\n Add a return statement with the correct type. For main(), use 'return 0;' at the end.\n\nThis error occurred inside a FunctionDecl statement.",
+    "suggestion": "Add a return statement matching the function's declared return type.",
+    "confidence": 0.9856227359825745
+  },
+  {
+    "message": "non-void function identifier should return a value [-Wreturn-mismatch]",
+    "raw_message": "non-void function 'getValue' should return a value [-Wreturn-mismatch]",
+    "category": "return_type_error",
+    "ast_node": "ReturnStmt",
+    "explanation": "What happened:\n Non-void function 'getValue' should return a value [-Wreturn-mismatch].\n\nWhy it happened:\n In C++, non-void functions must return a value that matches their declared return type. main() must always return int.\n\nHow to fix it:\n Add a return statement with the correct type. For main(), use 'return 0;' at the end.\n\nThis error occurred inside a ReturnStmt statement.",
+    "suggestion": "Add a return statement matching the function's declared return type.",
+    "confidence": 1.0
+  },
+  {
+    "message": "cannot initialize a variable of type type with an lvalue of type 'const char[6]'",
+    "raw_message": "cannot initialize a variable of type 'int' with an lvalue of type 'const char[6]'",
+    "category": "other",
+    "ast_node": "DeclStmt",
+    "explanation": "What happened:\n Cannot initialize a variable of type 'int' with an lvalue of type 'const char[6]'.\n\nWhy it happened:\n This may be a warning treated as an error, a platform-specific issue, or an uncommon language rule violation.\n\nHow to fix it:\n Read the full compiler message carefully and check the indicated line for the root cause.\n\nThis error occurred inside a DeclStmt statement.",
+    "suggestion": "Read the compiler message carefully and correct the highlighted code.",
+    "confidence": 0.48025694429209176
+  },
+  {
+    "message": "cannot initialize a variable of type 'char *' with an lvalue of type type",
+    "raw_message": "cannot initialize a variable of type 'char *' with an lvalue of type 'int'",
+    "category": "other",
+    "ast_node": "DeclStmt",
+    "explanation": "What happened:\n Cannot initialize a variable of type 'char *' with an lvalue of type 'int'.\n\nWhy it happened:\n This may be a warning treated as an error, a platform-specific issue, or an uncommon language rule violation.\n\nHow to fix it:\n Read the full compiler message carefully and check the indicated line for the root cause.\n\nThis error occurred inside a DeclStmt statement.",
+    "suggestion": "Read the compiler message carefully and correct the highlighted code.",
+    "confidence": 0.5870492128428652
+  },
+  {
+    "message": "invalid operands to binary expression (type and identifier (aka 'basic_string<char>'))",
+    "raw_message": "invalid operands to binary expression ('int' and 'string' (aka 'basic_string<char>'))",
+    "category": "type_error",
+    "ast_node": "DeclStmt",
+    "explanation": "What happened:\n Invalid operands to binary expression ('int' and 'string' (aka 'basic_string<char>')).\n\nWhy it happened:\n C++ is strongly typed. Operations between incompatible types are not allowed without an explicit cast.\n\nHow to fix it:\n Check the types of the values involved. Add an explicit cast, change the variable type, or use the correct operator.\n\nThis error occurred inside a DeclStmt statement.",
+    "suggestion": "Ensure both operands are compatible types or add an explicit cast.",
+    "confidence": 0.8871297279374962
+  },
+  {
+    "message": "cannot initialize a variable of type type with an rvalue of type type",
+    "raw_message": "cannot initialize a variable of type 'int' with an rvalue of type 'void'",
+    "category": "type_error",
+    "ast_node": "DeclStmt",
+    "explanation": "What happened:\n Cannot initialize a variable of type 'int' with an rvalue of type 'void'.\n\nWhy it happened:\n C++ is strongly typed. Operations between incompatible types are not allowed without an explicit cast.\n\nHow to fix it:\n Check the types of the values involved. Add an explicit cast, change the variable type, or use the correct operator.\n\nThis error occurred inside a DeclStmt statement.",
+    "suggestion": "Ensure both operands are compatible types or add an explicit cast.",
+    "confidence": 0.6892685156819023
+  },
+  {
+    "message": "no matching function for call to identifier",
+    "raw_message": "no matching function for call to 'foo'",
+    "category": "type_error",
+    "ast_node": "RecoveryExpr",
+    "explanation": "What happened:\n No overload of 'foo' matches the arguments you provided. Check the function signature and argument types.\n\nWhy it happened:\n C++ is strongly typed. Operations between incompatible types are not allowed without an explicit cast.\n\nHow to fix it:\n Check the types of the values involved. Add an explicit cast, change the variable type, or use the correct operator.\n\nThis error occurred inside a RecoveryExpr statement.",
+    "suggestion": "Ensure both operands are compatible types or add an explicit cast.",
+    "confidence": 1.0
+  },
+  {
+    "message": "indirection requires pointer operand (type invalid)",
+    "raw_message": "indirection requires pointer operand ('int' invalid)",
+    "category": "other",
+    "ast_node": "DeclStmt",
+    "explanation": "What happened:\n Indirection requires pointer operand ('int' invalid).\n\nWhy it happened:\n This may be a warning treated as an error, a platform-specific issue, or an uncommon language rule violation.\n\nHow to fix it:\n Read the full compiler message carefully and check the indicated line for the root cause.\n\nThis error occurred inside a DeclStmt statement.",
+    "suggestion": "Read the compiler message carefully and correct the highlighted code.",
+    "confidence": 0.6190294268843397
+  },
+  {
+    "message": "no viable conversion from type to identifier",
+    "raw_message": "no viable conversion from 'bool' to 'Point'",
+    "category": "other",
+    "ast_node": "DeclStmt",
+    "explanation": "What happened:\n No viable conversion from 'bool' to 'Point'.\n\nWhy it happened:\n This may be a warning treated as an error, a platform-specific issue, or an uncommon language rule violation.\n\nHow to fix it:\n Read the full compiler message carefully and check the indicated line for the root cause.\n\nThis error occurred inside a DeclStmt statement.",
+    "suggestion": "Read the compiler message carefully and correct the highlighted code.",
+    "confidence": 0.5698143834383299
+  },
+  {
+    "message": "invalid operands to binary expression (identifier (aka 'basic_string<char>') and identifier)",
+    "raw_message": "invalid operands to binary expression ('string' (aka 'basic_string<char>') and 'string')",
+    "category": "type_error",
+    "ast_node": "DeclStmt",
+    "explanation": "What happened:\n Invalid operands to binary expression ('string' (aka 'basic_string<char>') and 'string').\n\nWhy it happened:\n C++ is strongly typed. Operations between incompatible types are not allowed without an explicit cast.\n\nHow to fix it:\n Check the types of the values involved. Add an explicit cast, change the variable type, or use the correct operator.\n\nThis error occurred inside a DeclStmt statement.",
+    "suggestion": "Ensure both operands are compatible types or add an explicit cast.",
+    "confidence": 0.823367333650234
+  },
+  {
+    "message": "implicit conversion from type to type changes value from 3.14 to 3 [-Wliteral-conversion]",
+    "raw_message": "implicit conversion from 'double' to 'int' changes value from 3.14 to 3 [-Wliteral-conversion]",
+    "category": "other",
+    "ast_node": "CallExpr",
+    "explanation": "What happened:\n Implicit conversion from 'double' to 'int' changes value from 3.14 to 3 [-Wliteral-conversion].\n\nWhy it happened:\n This may be a warning treated as an error, a platform-specific issue, or an uncommon language rule violation.\n\nHow to fix it:\n Read the full compiler message carefully and check the indicated line for the root cause.\n\nThis error occurred inside a CallExpr statement.",
+    "suggestion": "Read the compiler message carefully and correct the highlighted code.",
+    "confidence": 0.7014309285090553
+  },
+  {
+    "message": "expected opening parenthesis after identifier",
+    "raw_message": "expected '(' after 'if'",
+    "category": "syntax_error",
+    "ast_node": null,
+    "explanation": "What happened:\n The compiler expected a '(' after 'if'.\n\nWhy it happened:\n C++ has strict syntax rules. A missing semicolon, bracket, or parenthesis causes the parser to lose track of where one statement ends and another begins.\n\nHow to fix it:\n Check the line reported and the line just before it. Look for a missing ';', unmatched '(' or '{', or a stray character.",
+    "suggestion": "Fix the syntax error near the reported location.",
+    "confidence": 0.8948030059936666
+  },
+  {
+    "message": "expected statement terminator after struct",
+    "raw_message": "expected ';' after struct",
+    "category": "syntax_error",
+    "ast_node": "CXXRecordDecl",
+    "explanation": "What happened:\n The compiler expected a ';' after struct.\n\nWhy it happened:\n C++ has strict syntax rules. A missing semicolon, bracket, or parenthesis causes the parser to lose track of where one statement ends and another begins.\n\nHow to fix it:\n Check the line reported and the line just before it. Look for a missing ';', unmatched '(' or '{', or a stray character.\n\nThis error occurred inside a CXXRecordDecl statement.",
+    "suggestion": "Fix the syntax error near the reported location.",
+    "confidence": 0.9505283768640387
+  },
+  {
+    "message": "identifier statement not in loop or switch statement",
+    "raw_message": "'break' statement not in loop or switch statement",
+    "category": "syntax_error",
+    "ast_node": null,
+    "explanation": "What happened:\n 'break' statement not in loop or switch statement.\n\nWhy it happened:\n C++ has strict syntax rules. A missing semicolon, bracket, or parenthesis causes the parser to lose track of where one statement ends and another begins.\n\nHow to fix it:\n Check the line reported and the line just before it. Look for a missing ';', unmatched '(' or '{', or a stray character.",
+    "suggestion": "Fix the syntax error near the reported location.",
+    "confidence": 0.6130846044528121
   }
 ]

@@ -1,0 +1,8 @@
+{
+  "expected_status": "error",
+  "expected_category": "type_error",
+  "expected_line": 7,
+  "cwe": null,
+  "expected_security_verdict": "clean",
+  "notes": "assigning void function result to int"
+}

@@ -1,0 +1,8 @@
+{
+  "expected_status": "error",
+  "expected_category": "name_resolution",
+  "expected_line": 7,
+  "cwe": "CWE-190",
+  "expected_security_verdict": "vulnerable",
+  "notes": "undeclared y AND integer overflow; tests if security scanner works alongside compile error"
+}

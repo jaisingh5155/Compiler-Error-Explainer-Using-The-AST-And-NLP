@@ -1,0 +1,8 @@
+{
+  "expected_status": "error",
+  "expected_category": "linker_error",
+  "expected_line": null,
+  "cwe": null,
+  "expected_security_verdict": "clean",
+  "notes": "no main() function defined"
+}

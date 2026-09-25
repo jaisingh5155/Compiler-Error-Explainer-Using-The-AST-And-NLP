@@ -1,0 +1,8 @@
+{
+  "expected_status": "success",
+  "expected_category": null,
+  "expected_line": null,
+  "cwe": "CWE-401",
+  "expected_security_verdict": "vulnerable",
+  "notes": "memory leak: malloc in loop without free"
+}

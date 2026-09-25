@@ -1,0 +1,8 @@
+{
+  "expected_status": "success",
+  "expected_category": null,
+  "expected_line": null,
+  "cwe": "CWE-415",
+  "expected_security_verdict": "vulnerable",
+  "notes": "double-free on same pointer"
+}

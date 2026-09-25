@@ -1,0 +1,8 @@
+{
+  "expected_status": "error",
+  "expected_category": "return_type_error",
+  "expected_line": 5,
+  "cwe": null,
+  "expected_security_verdict": "clean",
+  "notes": "non-void function with bare return;"
+}

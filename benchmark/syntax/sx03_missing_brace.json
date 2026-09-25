@@ -1,0 +1,8 @@
+{
+  "expected_status": "error",
+  "expected_category": "syntax_error",
+  "expected_line": 15,
+  "cwe": null,
+  "expected_security_verdict": "clean",
+  "notes": "missing closing brace for function greet()"
+}

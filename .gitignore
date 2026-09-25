@@ -1,0 +1,42 @@
+# Python
+__pycache__/
+*.pyc
+*.pyo
+.venv/
+*.egg-info/
+dist/
+build/
+
+# C++ build artifacts
+*.out
+a.out
+*.o
+*.obj
+*.exe
+security_demo
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Emissions tracking
+emissions.csv
+codecarbon_emissions.csv
+*.bak
+
+# Legacy artifacts (moved from root during Week 1 cleanup)
+legacy_artifacts/
+
+# Compiled ML models (large, should be regenerated)
+# Uncomment below if you want to exclude the joblib from git:
+# data/error_classifier.joblib
+
+# Misc
+*.log

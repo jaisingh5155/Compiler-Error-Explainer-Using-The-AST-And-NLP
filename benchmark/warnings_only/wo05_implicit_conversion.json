@@ -1,0 +1,8 @@
+{
+  "expected_status": "success",
+  "expected_category": null,
+  "expected_line": null,
+  "cwe": null,
+  "expected_security_verdict": "clean",
+  "notes": "double -> int implicit conversion, warning only, exit code 0"
+}

@@ -1,0 +1,8 @@
+{
+  "expected_status": "success",
+  "expected_category": null,
+  "expected_line": null,
+  "cwe": "CWE-457",
+  "expected_security_verdict": "vulnerable",
+  "notes": "use of uninitialized variable"
+}

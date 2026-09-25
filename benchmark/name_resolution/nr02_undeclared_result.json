@@ -1,0 +1,8 @@
+{
+  "expected_status": "error",
+  "expected_category": "name_resolution",
+  "expected_line": 11,
+  "cwe": null,
+  "expected_security_verdict": "clean",
+  "notes": "use of undeclared identifier result"
+}
