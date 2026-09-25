@@ -227,6 +227,28 @@ suggestions, or expand the common_errors glossary significantly.
 
 ## Phase 4 — Security Scanning (`security_analyzer.py`)
 
+> **Benchmark Security Reconciliation & Count Audit:**  
+> Direct recount of `benchmark/security/` (16 total files):
+> - **12 Vulnerable Files** (`expected_security_verdict: "vulnerable"`) covering **9 distinct CWEs**:
+>   - **CWE-78** (Command Injection): 1 file (`sec01_cmd_inject.cpp`)
+>   - **CWE-120** (Buffer Overflow): 2 variant files (`sec02_gets_overflow.cpp`, `sec03_strcpy_overflow.cpp`)
+>   - **CWE-134** (Format String): 1 file (`sec04_format_string.cpp`)
+>   - **CWE-190** (Integer Overflow): 1 file (`sec10_integer_overflow.cpp`)
+>   - **CWE-401** (Memory Leak): 1 file (`sec12_memory_leak.cpp`)
+>   - **CWE-415** (Double Free): 1 file (`sec06_double_free.cpp`)
+>   - **CWE-416** (Use-After-Free): 1 file (`sec05_use_after_free.cpp`)
+>   - **CWE-457** (Uninitialized Variable): 1 file (`sec11_uninit_use.cpp`)
+>   - **CWE-476** (Null Pointer Dereference): 3 variant files (`sec07_null_deref_direct.cpp`, `sec08_null_deref_struct.cpp`, `sec09_null_deref_return.cpp`)
+> - **4 Clean Decoy Files** (`expected_security_verdict: "clean"`):
+>   - `sec13_decoy_filesystem.cpp` (decoy for CWE-78)
+>   - `sec14_decoy_safe_printf.cpp` (decoy for CWE-134)
+>   - `sec15_decoy_safe_alloc.cpp` (decoy for CWE-401)
+>   - `sec16_decoy_safe_delete.cpp` (decoy for CWE-416)
+>
+> **Full-Benchmark Denominators Reconciled:**  
+> - **Recall Denominator (15 vulnerable files):** The benchmark harness evaluates security across *all* 78 files. 12 files in `benchmark/security/` + 3 multi-error files with security flaws in `benchmark/multi_error/` (`me02` CWE-415, `me03` CWE-416, `me04` CWE-190) = **15 total vulnerable files** (7 TP / 15 = 46.7% recall).
+> - **False-Positive Denominator (12 clean/decoy files):** Evaluated against the 8 files in `benchmark/clean/` + the 4 decoys in `benchmark/security/` = **12 clean/decoy files** (1 FP / 12 = 8.3% FP rate).
+
 ### Bug 4.1 · P0 · Null pointer dereference completely undetected
 
 **What happens:** The static scanner has a `_DIAGNOSTIC_RULES` entry for
@@ -456,7 +478,13 @@ dataset. Running the full benchmark added 12,342 bytes (12 KB) of new entries.
 **Evidence:**
 - Before benchmark: 14,719,358 bytes, MD5 `0239658b...`
 - After benchmark: 14,731,700 bytes, MD5 `ec0e2de3...`
-- **Modified by benchmark run: YES**
+- **Modified by benchmark run: YES** (+12,342 bytes appended during evaluation)
+
+> **Important Baseline & Backup Notice for Week 6:**  
+> `data/training_data.json` was **not** backed up to `legacy_artifacts/` prior to running the Week 2 benchmark. Consequently, the live file `data/training_data.json` is contaminated with benchmark run outputs and **is no longer a clean baseline for Week 6's retraining work**.  
+> To preserve references:
+> - The contaminated file has been backed up to [`legacy_artifacts/training_data_contaminated_week2.json`](file:///Users/jaisinghsaini/TOACD/cd1/legacy_artifacts/training_data_contaminated_week2.json).
+> - The untouched, pristine pre-benchmark baseline has been retrieved from git commit history (`HEAD~1:data/training_data.json`, 14,719,358 bytes) and archived at [`legacy_artifacts/training_data_pristine_week1.json`](file:///Users/jaisinghsaini/TOACD/cd1/legacy_artifacts/training_data_pristine_week1.json) so clean retraining data is guaranteed available for Week 6.
 
 **Where it lives:** [`src/dataset_logger.py` line 40-43](file:///Users/jaisinghsaini/TOACD/cd1/src/dataset_logger.py#L40-L43) —
 unconditionally appends and writes back to `DATA_FILE`.

@@ -61,6 +61,11 @@ The benchmark is partitioned into 11 specialized directories. Each `.cpp` file i
 ### B. Security Scanner Performance
 Evaluated across vulnerable targets, safe decoy patterns, and clean baseline files:
 
+> **Benchmark Security Reconciliation Note:**  
+> - **In `benchmark/security/` directly (16 files):** Exactly **12 vulnerable files** (covering 9 CWEs: CWE-78, CWE-120 [2 files], CWE-134, CWE-190, CWE-401, CWE-415, CWE-416, CWE-457, CWE-476 [3 variants]) and **4 clean decoy files** (`sec13`–`sec16`).  
+> - **Full-Benchmark Recall Denominator (15 files):** 12 vulnerable files in `security/` + 3 multi-error files with security flaws in `multi_error/` (`me02` CWE-415, `me03` CWE-416, `me04` CWE-190) = **15 total vulnerable files** across the benchmark.  
+> - **False-Positive Denominator (12 clean/decoy files):** Evaluated against the 8 files in `clean/` + the 4 decoys in `security/` = **12 clean/decoy files**.
+
 * **True Positives (TP):** 7
 * **False Negatives (FN):** 8
 * **False Positives (FP):** 1 (Safe function `filesystem()` flagged as command injection)
@@ -69,7 +74,7 @@ Evaluated across vulnerable targets, safe decoy patterns, and clean baseline fil
 * **Overall Recall:** **46.7%** (`7 / 15`) — *More than half of valid security flaws remain undetected.*
 * **False Positive Rate on Clean & Decoy Files:** **8.3%** (`1 / 12`)
 
-#### Breakdown by CWE:
+#### Breakdown by CWE (15 Vulnerable Benchmark Cases Total):
 | Vulnerability Class | Benchmark Cases | Detected | Recall | Scanner Bottleneck |
 |---|:---:|:---:|:---:|---|
 | **CWE-78** (Command Injection) | 1 | 1 | **100%** | Regex matches `system()` |
@@ -92,7 +97,11 @@ Evaluated across vulnerable targets, safe decoy patterns, and clean baseline fil
 ### D. Offline Training Pipeline Data Leak Audit
 * **Initial `data/training_data.json`:** `14,719,358` bytes (`MD5: 0239658bf3b6c91064e89dba5e954d30`)
 * **Post-Run `data/training_data.json`:** `14,731,700` bytes (`MD5: ec0e2de30feb2c83c70bc8fd58f6138a`)
-* **Critical Finding:** Running `main.py` invokes [dataset_logger.py](file:///Users/jaisinghsaini/TOACD/cd1/src/dataset_logger.py) on every execution, appending unverified test inputs directly into the training corpus.
+* **Critical Finding:** Running `main.py` invokes [dataset_logger.py](file:///Users/jaisinghsaini/TOACD/cd1/src/dataset_logger.py) on every execution, appending unverified test inputs directly into the training corpus (+12,342 bytes).
+* **Backup & Week 6 Baseline Status:**
+  - `data/training_data.json` was **not** backed up to `legacy_artifacts/` before the benchmark run, meaning the live file is contaminated and **no longer a clean baseline for Week 6 retraining**.
+  - The contaminated state is now backed up at [`legacy_artifacts/training_data_contaminated_week2.json`](file:///Users/jaisinghsaini/TOACD/cd1/legacy_artifacts/training_data_contaminated_week2.json).
+  - The pristine pre-benchmark baseline has been retrieved from git history and archived at [`legacy_artifacts/training_data_pristine_week1.json`](file:///Users/jaisinghsaini/TOACD/cd1/legacy_artifacts/training_data_pristine_week1.json) to serve as the clean ground truth for Week 6.
 
 ---
 
