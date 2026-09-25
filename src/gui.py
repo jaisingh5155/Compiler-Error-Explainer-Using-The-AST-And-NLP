@@ -2484,12 +2484,16 @@ class AppGUI(QMainWindow):
         elif result == UserGuidanceDialog.GIVE_HINT:
             hint = dlg.hint_text()
             if hint:
+                classifier = self.error_classifier
+                if classifier is None:
+                    classifier = _KeywordClassifier()
                 self.heal_worker = HealWorker(self.file_path, classifier, hint=hint)
                 self.heal_worker.attempt_started.connect(self._on_heal_attempt)
                 self.heal_worker.diff_ready.connect(self._on_heal_diff)
                 self.heal_worker.compile_clean.connect(self._on_heal_success)
                 self.heal_worker.give_up.connect(self._on_heal_give_up)
                 self.heal_worker.error_signal.connect(self._on_heal_error)
+                self.heal_worker.lines_fixed.connect(self.editor.set_fixed_lines)
                 self.heal_worker.telemetry_ready.connect(self._on_telemetry_ready)
                 self.btn_heal.setEnabled(False)
                 self.heal_worker.start()

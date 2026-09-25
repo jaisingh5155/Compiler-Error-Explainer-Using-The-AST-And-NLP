@@ -31,6 +31,7 @@ class CompilerError:
             "line":self.line,
             "column":self.column,
             "type":self.error_type,
+            "error_type":self.error_type,
             "message":self.message,
             "explanation":self.explanation,
             "suggestion":self.suggestion,

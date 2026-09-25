@@ -834,7 +834,7 @@ def fix_undeclared_variable(source: str, error: dict) -> Optional[str]:
         rf"\b(?:auto|bool|char|double|float|int|long|short|signed|unsigned|size_t|const|static|[\w:<>]+[*&\s]+)\b\s*\**\b{re.escape(var)}\b"
     )
     for existing in lines[:idx]:
-        if decl_pattern.search(existing):
+        if decl_pattern.search(_mask_comments_and_strings(existing)):
             return None
 
     indent = re.match(r"^(\s*)", lines[idx]).group(1)
