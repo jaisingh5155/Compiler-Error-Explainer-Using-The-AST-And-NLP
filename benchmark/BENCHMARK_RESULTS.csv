@@ -2,8 +2,8 @@
 # Date: 2026-09-25
 # Total benchmark files: 78
 #
-# STATUS ACCURACY: 64/78 (82.1%)
-# CLASSIFICATION ACCURACY: 28/48 (58.3%)
+# STATUS ACCURACY: 72/78 (92.3%)
+# CLASSIFICATION ACCURACY: 42/48 (87.5%)
 #
 # SECURITY SCANNER:
 #   True Positives:  7
@@ -26,35 +26,34 @@
 #   CWE-78: 1/1 (100%)
 #
 # AUTO-HEALER:
-#   Attempted:         48
-#   compiled_clean:    17
-#   gave_up:           26
-#   no_errors_parsed:   5
-#   crashed:            0
-#   success rate:      35.4% (17/48)
+#   Attempted:      48
+#   compiled_clean:  17
+#   gave_up:         26
+#   crashed:         0
+#   success rate:    35.4%
 #
 # TRAINING DATA MUTATION CHECK:
 #   Size before: 14719358 bytes, MD5: 0239658bf3b6c91064e89dba5e954d30
-#   Size after:  14731700 bytes, MD5: ec0e2de30feb2c83c70bc8fd58f6138a
-#   Modified by benchmark run: YES — DATA LEAK!
+#   Size after:  14719358 bytes, MD5: 0239658bf3b6c91064e89dba5e954d30
+#   Modified by benchmark run: No (safe)
 #
 filepath,category_dir,cwe,expected_status,actual_status,status_match,expected_category,actual_category,category_match,confidence,expected_security_verdict,actual_security_verdict,security_match,heal_outcome,notes
-benchmark/missing_include/mi01_iostream.cpp,missing_include,,error,error,True,missing_include,missing_include,True,0.8563,clean,clean,True,compiled_clean,cout used without #include <iostream>
+benchmark/missing_include/mi01_iostream.cpp,missing_include,,error,error,True,missing_include,missing_include,True,0.8563,clean,clean,True,gave_up,cout used without #include <iostream>
 benchmark/missing_include/mi02_vector.cpp,missing_include,,error,success,False,missing_include,,False,,clean,clean,True,compiled_clean,vector used without #include <vector>
 benchmark/missing_include/mi03_string.cpp,missing_include,,error,success,False,missing_include,,False,,clean,clean,True,compiled_clean,string used without #include <string>
 benchmark/missing_include/mi04_map.cpp,missing_include,,error,error,True,missing_include,other,False,0.9354,clean,clean,True,gave_up,map and string used without includes
-benchmark/name_resolution/nr01_undeclared_var.cpp,name_resolution,,error,error,True,name_resolution,missing_include,False,0.4574,clean,clean,True,gave_up,use of undeclared identifier y
-benchmark/name_resolution/nr02_undeclared_result.cpp,name_resolution,,error,error,True,name_resolution,missing_include,False,0.4919,clean,clean,True,gave_up,use of undeclared identifier result
+benchmark/name_resolution/nr01_undeclared_var.cpp,name_resolution,,error,error,True,name_resolution,name_resolution,True,0.9984,clean,clean,True,gave_up,use of undeclared identifier y
+benchmark/name_resolution/nr02_undeclared_result.cpp,name_resolution,,error,error,True,name_resolution,name_resolution,True,0.997,clean,clean,True,compiled_clean,use of undeclared identifier result
 benchmark/name_resolution/nr03_keyword_retrun.cpp,name_resolution,,error,error,True,name_resolution,name_resolution,True,1.0,clean,clean,True,compiled_clean,keyword typo retrun instead of return
 benchmark/name_resolution/nr04_keyword_cosnt.cpp,name_resolution,,error,error,True,name_resolution,name_resolution,True,1.0,clean,clean,True,compiled_clean,keyword typo cosnt instead of const
-benchmark/name_resolution/nr05_undeclared_func.cpp,name_resolution,,error,error,True,name_resolution,name_resolution,True,0.461,clean,clean,True,gave_up,call to undeclared function computeSum
-benchmark/name_resolution/nr06_misspelled_ident.cpp,name_resolution,,error,error,True,name_resolution,missing_include,False,0.511,clean,clean,True,compiled_clean,misspelled variable name countr instead of counter
-benchmark/name_resolution/nr07_missing_std_prefix.cpp,name_resolution,,error,error,True,name_resolution,name_resolution,True,0.9951,clean,clean,True,gave_up,cout/endl used without using namespace std or std:: prefix
-benchmark/name_resolution/nr08_wrong_scope.cpp,name_resolution,,error,error,True,name_resolution,missing_include,False,0.5174,clean,clean,True,gave_up,variable temp used outside its for-loop scope
+benchmark/name_resolution/nr05_undeclared_func.cpp,name_resolution,,error,error,True,name_resolution,name_resolution,True,1.0,clean,clean,True,gave_up,call to undeclared function computeSum
+benchmark/name_resolution/nr06_misspelled_ident.cpp,name_resolution,,error,error,True,name_resolution,name_resolution,True,0.9943,clean,clean,True,compiled_clean,misspelled variable name countr instead of counter
+benchmark/name_resolution/nr07_missing_std_prefix.cpp,name_resolution,,error,error,True,name_resolution,name_resolution,True,1.0,clean,clean,True,gave_up,cout/endl used without using namespace std or std:: prefix
+benchmark/name_resolution/nr08_wrong_scope.cpp,name_resolution,,error,error,True,name_resolution,name_resolution,True,0.9979,clean,clean,True,gave_up,variable temp used outside its for-loop scope
 benchmark/security/sec01_cmd_inject.cpp,security,CWE-78,success,error,False,,other,,0.7245,vulnerable,vulnerable,True,,command injection via system() with user input
-benchmark/security/sec02_gets_overflow.cpp,security,CWE-120,success,error,False,,other,,0.894,vulnerable,vulnerable,True,,buffer overflow via gets()
+benchmark/security/sec02_gets_overflow.cpp,security,CWE-120,success,success,True,,other,,0.894,vulnerable,vulnerable,True,,buffer overflow via gets()
 benchmark/security/sec03_strcpy_overflow.cpp,security,CWE-120,success,success,True,,,,,vulnerable,vulnerable,True,,buffer overflow via strcpy without bounds check
-benchmark/security/sec04_format_string.cpp,security,CWE-134,success,error,False,,other,,0.9562,vulnerable,vulnerable,True,,format string vulnerability: printf with user-controlled format
+benchmark/security/sec04_format_string.cpp,security,CWE-134,success,success,True,,other,,0.9562,vulnerable,vulnerable,True,,format string vulnerability: printf with user-controlled format
 benchmark/security/sec05_use_after_free.cpp,security,CWE-416,success,success,True,,,,,vulnerable,vulnerable,True,,use-after-free: deref deleted pointer
 benchmark/security/sec06_double_free.cpp,security,CWE-415,success,success,True,,,,,vulnerable,clean,False,,double-free on same pointer
 benchmark/security/sec07_null_deref_direct.cpp,security,CWE-476,success,success,True,,,,,vulnerable,clean,False,,null pointer dereference: direct
@@ -69,13 +68,13 @@ benchmark/security/sec15_decoy_safe_alloc.cpp,security,,success,success,True,,,,
 benchmark/security/sec16_decoy_safe_delete.cpp,security,,success,success,True,,,,,clean,clean,True,,"DECOY: properly deleted and nulled pointer, no UaF"
 benchmark/return_type/rt01_return_string_from_int.cpp,return_type,,error,error,True,return_type_error,return_type_error,True,1.0,clean,clean,True,gave_up,return hello from int main()
 benchmark/return_type/rt02_void_main.cpp,return_type,,error,error,True,return_type_error,return_type_error,True,0.9856,clean,clean,True,gave_up,void main() instead of int main()
-benchmark/return_type/rt03_missing_return.cpp,return_type,,error,error,True,return_type_error,return_type_error,True,1.0,clean,clean,True,compiled_clean,non-void function missing return statement (warning on clang)
+benchmark/return_type/rt03_missing_return.cpp,return_type,,error,success,False,return_type_error,return_type_error,True,1.0,clean,clean,True,compiled_clean,non-void function missing return statement (warning on clang)
 benchmark/return_type/rt04_return_void_from_int.cpp,return_type,,error,error,True,return_type_error,return_type_error,True,1.0,clean,clean,True,gave_up,non-void function with bare return;
-benchmark/linker_errors/lk01_undef_func.cpp,linker_errors,,error,success,False,linker_error,,False,,clean,clean,True,no_errors_parsed,function declared but not defined
-benchmark/linker_errors/lk02_missing_main.cpp,linker_errors,,error,success,False,linker_error,,False,,clean,clean,True,no_errors_parsed,no main() function defined
-benchmark/linker_errors/lk03_undef_class_method.cpp,linker_errors,,error,success,False,linker_error,,False,,clean,clean,True,no_errors_parsed,class method declared but not defined
-benchmark/linker_errors/lk04_undef_extern_var.cpp,linker_errors,,error,success,False,linker_error,,False,,clean,clean,True,no_errors_parsed,extern variable declared but not defined
-benchmark/linker_errors/lk05_undef_template_spec.cpp,linker_errors,,error,success,False,linker_error,,False,,clean,clean,True,no_errors_parsed,template function declared but not instantiated/defined
+benchmark/linker_errors/lk01_undef_func.cpp,linker_errors,,error,error,True,linker_error,linker_error,True,0.95,clean,clean,True,no_errors_parsed,function declared but not defined
+benchmark/linker_errors/lk02_missing_main.cpp,linker_errors,,error,error,True,linker_error,linker_error,True,0.95,clean,clean,True,no_errors_parsed,no main() function defined
+benchmark/linker_errors/lk03_undef_class_method.cpp,linker_errors,,error,error,True,linker_error,linker_error,True,0.95,clean,clean,True,no_errors_parsed,class method declared but not defined
+benchmark/linker_errors/lk04_undef_extern_var.cpp,linker_errors,,error,error,True,linker_error,linker_error,True,0.95,clean,clean,True,no_errors_parsed,extern variable declared but not defined
+benchmark/linker_errors/lk05_undef_template_spec.cpp,linker_errors,,error,error,True,linker_error,linker_error,True,0.95,clean,clean,True,no_errors_parsed,template function declared but not instantiated/defined
 benchmark/clean/cl01_hello.cpp,clean,,success,success,True,,,,,clean,clean,True,,simple hello world
 benchmark/clean/cl02_math.cpp,clean,,success,success,True,,,,,clean,clean,True,,"math functions, no errors"
 benchmark/clean/cl03_loops.cpp,clean,,success,success,True,,,,,clean,clean,True,,"simple loop, no errors"
@@ -88,25 +87,25 @@ benchmark/redefinition/rd01_global_var.cpp,redefinition,,error,error,True,redefi
 benchmark/redefinition/rd02_duplicate_func.cpp,redefinition,,error,error,True,redefinition,redefinition,True,1.0,clean,clean,True,gave_up,function foo() defined twice
 benchmark/redefinition/rd03_local_redef.cpp,redefinition,,error,error,True,redefinition,redefinition,True,1.0,clean,clean,True,compiled_clean,local variable x redefined in same scope
 benchmark/redefinition/rd04_enum_redef.cpp,redefinition,,error,error,True,redefinition,redefinition,True,1.0,clean,clean,True,gave_up,enum Color redefined
-benchmark/multi_error/me01_syntax_and_type.cpp,multi_error,,error,error,True,syntax_error,other,False,0.4803,clean,clean,True,gave_up,"missing semicolon AND type mismatch (int = string literal), two independent errors"
+benchmark/multi_error/me01_syntax_and_type.cpp,multi_error,,error,error,True,syntax_error,type_error,False,0.9302,clean,clean,True,gave_up,"missing semicolon AND type mismatch (int = string literal), two independent errors"
 benchmark/multi_error/me02_redef_and_security.cpp,multi_error,CWE-415,error,error,True,redefinition,redefinition,True,1.0,vulnerable,clean,False,compiled_clean,redefinition error blocks compilation; double-free should still be found by security scanner
 benchmark/multi_error/me03_missing_include_and_uaf.cpp,multi_error,CWE-416,error,success,False,missing_include,,False,,vulnerable,vulnerable,True,compiled_clean,missing #include <vector> AND use-after-free; does security scanner find UaF when compile fails?
-benchmark/multi_error/me04_name_and_overflow.cpp,multi_error,CWE-190,error,error,True,name_resolution,missing_include,False,0.4574,vulnerable,clean,False,gave_up,undeclared y AND integer overflow; tests if security scanner works alongside compile error
-benchmark/multi_error/me05_two_type_errors.cpp,multi_error,,error,error,True,type_error,other,False,0.4803,clean,clean,True,gave_up,two independent type errors in same function
-benchmark/type_errors/te01_int_to_charptr.cpp,type_errors,,error,error,True,type_error,other,False,0.587,clean,clean,True,gave_up,cannot init char* with int
+benchmark/multi_error/me04_name_and_overflow.cpp,multi_error,CWE-190,error,error,True,name_resolution,name_resolution,True,0.9984,vulnerable,clean,False,gave_up,undeclared y AND integer overflow; tests if security scanner works alongside compile error
+benchmark/multi_error/me05_two_type_errors.cpp,multi_error,,error,error,True,type_error,type_error,True,0.9302,clean,clean,True,gave_up,two independent type errors in same function
+benchmark/type_errors/te01_int_to_charptr.cpp,type_errors,,error,error,True,type_error,type_error,True,1.0,clean,clean,True,gave_up,cannot init char* with int
 benchmark/type_errors/te02_int_plus_string.cpp,type_errors,,error,error,True,type_error,type_error,True,0.8871,clean,clean,True,gave_up,invalid operands int + string
-benchmark/type_errors/te03_void_to_int.cpp,type_errors,,error,error,True,type_error,type_error,True,0.6893,clean,clean,True,gave_up,assigning void function result to int
+benchmark/type_errors/te03_void_to_int.cpp,type_errors,,error,error,True,type_error,type_error,True,0.9795,clean,clean,True,gave_up,assigning void function result to int
 benchmark/type_errors/te04_wrong_arg_count.cpp,type_errors,,error,error,True,type_error,type_error,True,1.0,clean,clean,True,gave_up,too many arguments to function foo
 benchmark/type_errors/te05_wrong_stream_op.cpp,type_errors,,error,error,True,type_error,type_error,True,0.9056,clean,clean,True,compiled_clean,cin << instead of cin >>
-benchmark/type_errors/te06_deref_non_pointer.cpp,type_errors,,error,error,True,type_error,other,False,0.619,clean,clean,True,gave_up,indirection on int (non-pointer)
-benchmark/type_errors/te07_bool_to_struct.cpp,type_errors,,error,error,True,type_error,other,False,0.5698,clean,clean,True,gave_up,cannot init struct with bool
+benchmark/type_errors/te06_deref_non_pointer.cpp,type_errors,,error,error,True,type_error,type_error,True,0.9087,clean,clean,True,gave_up,indirection on int (non-pointer)
+benchmark/type_errors/te07_bool_to_struct.cpp,type_errors,,error,error,True,type_error,type_error,True,0.9476,clean,clean,True,gave_up,cannot init struct with bool
 benchmark/type_errors/te08_string_subtract.cpp,type_errors,,error,error,True,type_error,type_error,True,0.8234,clean,clean,True,gave_up,no operator- for string
 benchmark/warnings_only/wo01_unused_var.cpp,warnings_only,,success,success,True,,,,,clean,clean,True,,"unused variable x, compiles with warning only"
 benchmark/warnings_only/wo02_unused_param.cpp,warnings_only,,success,success,True,,,,,clean,clean,True,,unused parameter times
 benchmark/warnings_only/wo03_sign_compare.cpp,warnings_only,,success,success,True,,,,,clean,clean,True,,signed/unsigned comparison warning (int vs size_t)
 benchmark/warnings_only/wo04_uninit_var.cpp,warnings_only,,success,success,True,,,,,clean,clean,True,,"uninitialized variable total, compiles as warning"
-benchmark/warnings_only/wo05_implicit_conversion.cpp,warnings_only,,success,error,False,,other,,0.7014,clean,clean,True,,"double -> int implicit conversion, warning only, exit code 0"
-benchmark/warnings_only/wo06_missing_return_warning.cpp,warnings_only,,success,error,False,,return_type_error,,1.0,clean,clean,True,,"missing return in non-void function, warning only on clang (exit 0)"
+benchmark/warnings_only/wo05_implicit_conversion.cpp,warnings_only,,success,success,True,,other,,0.7014,clean,clean,True,,"double -> int implicit conversion, warning only, exit code 0"
+benchmark/warnings_only/wo06_missing_return_warning.cpp,warnings_only,,success,success,True,,return_type_error,,1.0,clean,clean,True,,"missing return in non-void function, warning only on clang (exit 0)"
 benchmark/syntax/sx01_missing_semi_decl.cpp,syntax,,error,error,True,syntax_error,syntax_error,True,0.9008,clean,clean,True,compiled_clean,missing semicolon after int x = 10
 benchmark/syntax/sx02_missing_semi_multi.cpp,syntax,,error,error,True,syntax_error,syntax_error,True,0.9008,clean,clean,True,compiled_clean,"missing semicolon, two variable declarations"
 benchmark/syntax/sx03_missing_brace.cpp,syntax,,error,error,True,syntax_error,other,False,0.694,clean,clean,True,compiled_clean,missing closing brace for function greet()
