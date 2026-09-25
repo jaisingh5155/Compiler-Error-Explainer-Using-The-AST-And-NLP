@@ -248,31 +248,24 @@ suggestions, or expand the common_errors glossary significantly.
 > - **Recall Denominator (15 vulnerable files):** The benchmark harness evaluates security across *all* 78 files. 12 files in `benchmark/security/` + 3 multi-error files with security flaws in `benchmark/multi_error/` (`me02` CWE-415, `me03` CWE-416, `me04` CWE-190) = **15 total vulnerable files** (7 TP / 15 = 46.7% recall).
 > - **False-Positive Denominator (12 clean/decoy files):** Evaluated against the 8 files in `benchmark/clean/` + the 4 decoys in `benchmark/security/` = **12 clean/decoy files** (1 FP / 12 = 8.3% FP rate).
 >
-> ### 0%-Recall CWE Analysis: "Compile-Gate Bug" vs "No Detection Logic"
-> Every 0%-recall CWE (190, 415, 457, 476) was audited to verify whether its instances in `benchmark/security/` (NOT `multi_error/`) also scored 0% independently:
->
-> | CWE ID & Class | Instances in `benchmark/security/` (Clean Compile, Exit 0) | Instances in `benchmark/multi_error/` (Compile Error, Exit 1) | Independent Score in `security/` | Root Failure Category |
-> |---|---|---|:---:|---|
-> | **CWE-476**<br>(Null Dereference) | `sec07` (direct deref: `*p`),<br>`sec08` (struct member: `n->val`),<br>`sec09` (func return: `get_null()->val`)<br>*(All 3 exit 0 — not blocked by compiler)* | *None* | **0/3 (0%)** | **100% Missing Detection Logic** |
-> | **CWE-415**<br>(Double Free) | `sec06_double_free.cpp`<br>*(Exits 0 — not blocked by compiler)* | `me02_redef_and_security.cpp`<br>*(Blocked by `error: redefinition of 'x'`)* | **0/1 (0%)** | **Defective Logic (sec06)** +<br>**Compile-Gated (me02)** |
-> | **CWE-190**<br>(Integer Overflow) | `sec10_integer_overflow.cpp`<br>*(Exits 0 — not blocked by compiler)* | `me04_name_and_overflow.cpp`<br>*(Blocked by `error: use of undeclared identifier 'y'`)* | **0/1 (0%)** | **Inadequate Single-Line Regex (sec10)** +<br>**Compile-Gated (me04)** |
-> | **CWE-457**<br>(Uninitialized Var) | `sec11_uninit_use.cpp`<br>*(Exits 0 — not blocked by compiler)* | *None* | **0/1 (0%)** | **100% Missing Detection Logic** |
->
-> **Individual CWE Determinations:**
-> - **CWE-476 (Null Dereference):** All 3 dedicated variants in `benchmark/security/` missed detection independently (0/3, 0%) despite clean compilation (exit 0) because **no detection logic exists for this pattern regardless of gating** (the tool has zero source-level AST/regex pointer trackers and relies solely on compiler warning diagnostics that Apple Clang never emits).
-> - **CWE-190 (Integer Overflow):** `sec10` in `benchmark/security/` missed detection independently (0/1, 0%) despite clean compilation (exit 0) because **no detection logic exists for multi-line integer overflow patterns regardless of gating** (the line 456 regex requires `INT_MAX` and arithmetic operators on the same line), whereas `me04` in `multi_error/` was **blocked by the compile-gate (Bug 4.1)**.
-> - **CWE-457 (Uninitialized Variable Use):** `sec11` in `benchmark/security/` missed detection independently (0/1, 0%) despite clean compilation (exit 0) because **no detection logic exists for this pattern regardless of gating** (the scanner completely lacks a source-level uninitialized read detector).
-> - **CWE-415 (Double Free):** `sec06` in `benchmark/security/` missed detection independently (0/1, 0%) despite clean compilation (exit 0) because **no functional detection logic exists for consecutive deletes regardless of gating** (line 476 overwrites `freed_vars[name]` before checking `line_no != freed_line`, preventing double-delete matches, and zero tracking exists for `free()`), whereas `me02` in `multi_error/` was **blocked by the compile-gate (Bug 4.1)**.
-> - **CWE-416 (Use-After-Free) Clarification:** CWE-416 scored 100% recall (2/2) because `sec05` compiled cleanly and was detected, while `me03` compiled cleanly due to `<iostream>` transitively including `<vector>` on Apple Clang; however, on true compile failures like legacy `test_cases/tc16.cpp` or `me02`, upstream compile errors halt the pipeline and completely conceal vulnerabilities, confirming that **Bug 4.1 (the compile-gate) is a real and separate architectural cause** from missing detector rules.
->
-> **Implications for Week 4 Fix Strategy:**  
-> Week 4 requires **both** fixes:
-> 1. Fix the compile-gate architectural bug (Bug 4.1) so files with syntax/type errors still undergo AST/source security analysis.
-> 2. Implement new and corrected source-level detection rules for CWE-476, CWE-415, CWE-190, and CWE-457.
+> ### 0%-Recall CWE Reclassification: Broken Detection Logic vs. Missing Detection Logic
 
-### Bug 4.1 · P0 · Security scanner gated by compile errors & Null pointer dereference
-**COMPILE-GATE STATUS: RESOLVED** (Commit: [`e119e12`](file:///Users/jaisinghsaini/TOACD/cd1/src/main.py))  
-*Note: Detector rules for CWE-476, 415, 190, 457 confirmed to have no detection logic regardless of gating; scheduled for Week 4/7 rebuild.*
+Audit of all 0%-recall CWEs (190, 415, 457, 476) establishes a critical architectural distinction between **Broken Detection Logic** (existing detector code with contained defects) and **Missing Detection Logic** (complete absence of source-level analysis):
+
+| CWE ID & Vulnerability Class | Detection State in `security_analyzer.py` | Benchmark Files Affected | Root Cause & Defect Description | Fix Complexity & Target Milestone |
+|---|---|---|---|---|
+| **CWE-190**<br>(Integer Overflow) | **Broken Detection Logic**<br>(Existing detector) | `sec10` (clean compile)<br>`me04` (ungated in W3) | Line 456 regex defect: wrongly requires `INT_MAX`/keywords and arithmetic operator on the *same line*, failing standard multi-line assignments (`int x = INT_MAX; x = x + 1;`). | **Contained Logic Fix (Week 4 Quick Win)**:<br>Relax regex / track variable assignment across lines. Does NOT require Week 7 dataflow engine. |
+| **CWE-415**<br>(Double Free) | **Broken Detection Logic**<br>(Existing detector) | `sec06` (clean compile)<br>`me02` (ungated in W3) | Line 476 sequencing defect: dictionary write `freed_vars[name] = line_no` executes *before* checking `line_no != freed_line`, causing consecutive deletes to overwrite the tracker before double-free check runs. | **Contained Logic Fix (Week 4 Quick Win)**:<br>Reorder check before dictionary assignment. Does NOT require Week 7 dataflow engine. |
+| **CWE-476**<br>(Null Pointer Deref) | **Missing Detection Logic**<br>(Zero source detector) | `sec07`, `sec08`, `sec09`<br>(all clean compile) | Scanner has zero source-level patterns or dataflow tracking for `nullptr` / `NULL` dereferences; diagnostic rule matches only compiler warnings that Apple Clang never emits. | **New Dataflow Engine (Week 7 Scope)**:<br>Requires pointer analysis and control-flow / dataflow tracking from scratch. |
+| **CWE-457**<br>(Uninitialized Variable) | **Missing Detection Logic**<br>(Zero source detector) | `sec11`<br>(clean compile) | Scanner has zero source-level tracking for uninitialized reads; relies solely on compiler warnings not emitted on Apple Clang. | **New Dataflow Engine (Week 7 Scope)**:<br>Requires def-use chain / dataflow tracking from scratch. |
+
+#### Architectural Takeaway for Planning
+- **Week 4 Quick Wins:** Fix the 2 broken detectors (CWE-190, CWE-415). Both are localized logic/sequencing corrections within `security_analyzer.py` and do not require heavy AST/dataflow machinery.
+- **Week 7 Scope:** Implement genuine dataflow and pointer-tracking engines for CWE-476 and CWE-457 from scratch.
+
+### Bug 4.1 · P0 · Security scanner gated by compile errors
+**STATUS: RESOLVED** (Commit: [`e119e12`](file:///Users/jaisinghsaini/TOACD/cd1/src/main.py))  
+*Note: Gating resolved in Week 3. False negatives on CWE-190/415 reclassified as Bug 4.2/4.3 (Week 4 quick wins); CWE-476/457 scheduled for Week 7 dataflow sprint.*
 
 **What happens:** 
 1. **Compile Gate Bug (Resolved in Week 3):** In earlier pipeline versions, files with compilation errors did not undergo independent security scanning.
@@ -294,46 +287,35 @@ warning at compile time, so the diagnostic rule never fires either.
 
 ---
 
-### Bug 4.2 · P1 · Double-free not detected in isolated cases
+### Bug 4.2 · P1 · Broken Detection Logic: Double-Free (CWE-415) dictionary sequencing defect
+**CLASSIFICATION: BROKEN DETECTION LOGIC (WEEK 4 QUICK WIN)**
 
-**What happens:** The scanner uses `freed_vars` tracking via `_DELETE_RE` to detect
-double-free. The regex `delete\s*(?:\[\])?\s*([A-Za-z_]\w*)\s*;` captures the
-variable name and checks if it's deleted again on a later line. But in the simple case
-`delete p; delete p;` on consecutive lines, the second delete matches as a new
-"first delete" rather than being flagged.
+**What happens:** The scanner has existing detection logic for double-free using `freed_vars` tracking via `_DELETE_RE`. But in line 476, `freed_vars[delete_match.group(1)] = line_no` executes *before* the double-free check runs. On the second delete, this assignment immediately overwrites the tracked line number with the current line number, causing the subsequent check `if freed_name in freed_vars and line_no != freed_line` to evaluate to `line_no != line_no` (False), completely blinding the detector to double-frees.
 
 **Evidence:**
 - `sec06_double_free.cpp` — expected `vulnerable`, got `clean`
-- `me02_redef_and_security.cpp` — expected `vulnerable`, got `clean` (double-free hidden behind redefinition error)
+- `me02_redef_and_security.cpp` — expected `vulnerable`, got `clean` (ungated in Week 3, but fails due to this bug)
 - CWE-415 recall: **0/2 (0%)**
 
-**Where it lives:** [`src/security_analyzer.py` lines 474-486](file:///Users/jaisinghsaini/TOACD/cd1/src/security_analyzer.py#L474-L486) —
-the `freed_vars[delete_match.group(1)] = line_no` overwrites on the second delete
-before the double-free check runs.
+**Where it lives:** [`src/security_analyzer.py` lines 474-486](file:///Users/jaisinghsaini/TOACD/cd1/src/security_analyzer.py#L474-L486)
 
-**Fix direction:** Check for the double-free *before* updating `freed_vars`, or
-restructure to check `if freed_name in freed_vars and line_no != freed_line` before
-recording the new delete.
+**Fix Scope:** Small, contained, same-file logic fix (reorder the dictionary update to occur *after* the double-free check, and add support for `free()`). Fixable in Week 4 as a quick win; does NOT require Week 7 dataflow tracking.
 
 ---
 
-### Bug 4.3 · P1 · Integer overflow not detected without compiler-emitted keywords
+### Bug 4.3 · P1 · Broken Detection Logic: Integer Overflow (CWE-190) single-line regex defect
+**CLASSIFICATION: BROKEN DETECTION LOGIC (WEEK 4 QUICK WIN)**
 
-**What happens:** The scanner's source-level integer overflow check
-(lines 456-465) only fires when the code contains `INT_MAX`, `SIZE_MAX`, `sizeof`,
-or words like `alloc`, `size`, `len`. A simple `int x = INT_MAX; x = x + 1;` should
-trigger but doesn't because the pattern requires *both* an arithmetic expression
-*and* one of those keywords on the same line.
+**What happens:** The scanner has existing detection logic for integer overflow (lines 456-465). However, the regex pattern requires both the sentinel keyword (`INT_MAX`, `SIZE_MAX`, `sizeof`, etc.) AND the arithmetic operator (`+`, `*`) on the *exact same line*. Standard real-world code (including `me04_name_and_overflow.cpp`: `int x = INT_MAX; x = x + 1;`) splits the declaration and the arithmetic across separate lines, causing the existing check to fail.
 
 **Evidence:**
 - `sec10_integer_overflow.cpp` — expected `vulnerable`, got `clean`
-- `me04_name_and_overflow.cpp` — expected `vulnerable`, got `clean`
+- `me04_name_and_overflow.cpp` — expected `vulnerable`, got `clean` (ungated in Week 3, but fails due to this bug)
 - CWE-190 recall: **0/2 (0%)**
 
 **Where it lives:** [`src/security_analyzer.py` lines 456-465](file:///Users/jaisinghsaini/TOACD/cd1/src/security_analyzer.py#L456-L465)
 
-**Fix direction:** Track variables assigned `INT_MAX` or similar sentinel values and
-flag arithmetic on them, even across separate lines.
+**Fix Scope:** Contained logic fix (track variables assigned `INT_MAX`/`SIZE_MAX` across statements or relax the regex). Fixable in Week 4 as a quick win; does NOT require Week 7 dataflow tracking.
 
 ---
 
@@ -356,21 +338,35 @@ free at the variable level rather than scope level.
 
 ---
 
-### Bug 4.5 · P2 · Uninitialized variable use (CWE-457) not detected by source scan
+### Bug 4.5 · P2 · Missing Detection Logic: Uninitialized variable use (CWE-457) lacks source-level scanner
+**CLASSIFICATION: MISSING DETECTION LOGIC (WEEK 7 SCOPE)**
 
-**What happens:** The scanner has no source-level check for uninitialized variable
-use. It only detects this via compiler warnings (`may be used uninitialized`), which
-Apple Clang doesn't always emit for simple cases.
+**What happens:** The scanner has completely zero source-level tracking for uninitialized reads. It relies exclusively on compiler warnings (`may be used uninitialized`), which Apple Clang does not emit under default flags.
 
 **Evidence:**
 - `sec11_uninit_use.cpp` — expected `vulnerable`, got `clean`
 - CWE-457 recall: **0/1 (0%)**
 
-**Where it lives:** [`src/security_analyzer.py`](file:///Users/jaisinghsaini/TOACD/cd1/src/security_analyzer.py) —
-no dataflow tracking for uninitialized reads.
+**Where it lives:** [`src/security_analyzer.py`](file:///Users/jaisinghsaini/TOACD/cd1/src/security_analyzer.py)
 
-**Fix direction:** Add source-level tracking: when a variable is declared without
-initialization, flag any use before an assignment.
+**Fix Scope:** Genuinely missing detection logic. Requires def-use chain and control-flow / dataflow analysis written from scratch. Correctly scoped to Week 7 dataflow engine.
+
+---
+
+### Bug 4.6 · P2 · Missing Detection Logic: Null pointer dereference (CWE-476) lacks source-level scanner
+**CLASSIFICATION: MISSING DETECTION LOGIC (WEEK 7 SCOPE)**
+
+**What happens:** The scanner has zero source-level patterns or dataflow tracking for `nullptr` / `NULL` dereferences (`*p`, `p->field`, etc.). It relies entirely on compiler warning diagnostics that Apple Clang never emits at compile time.
+
+**Evidence:**
+- `sec07_null_deref_direct.cpp` — expected `vulnerable`, got `clean`
+- `sec08_null_deref_struct.cpp` — expected `vulnerable`, got `clean`
+- `sec09_null_deref_return.cpp` — expected `vulnerable`, got `clean`
+- CWE-476 recall: **0/3 (0%)**
+
+**Where it lives:** [`src/security_analyzer.py`](file:///Users/jaisinghsaini/TOACD/cd1/src/security_analyzer.py)
+
+**Fix Scope:** Genuinely missing detection logic. Requires pointer tracking and control-flow analysis written from scratch. Correctly scoped to Week 7 dataflow engine.
 
 ---
 
