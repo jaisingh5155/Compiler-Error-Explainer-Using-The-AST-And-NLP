@@ -157,6 +157,20 @@ def explain_error(error) -> Dict[str, Any]:
             "confidence": 0.0
         }
 
+    # 0. Check for linker error
+    if getattr(error, "category", None) == "linker_error" or (error.message and re.search(r"undefined reference|undefined symbols|symbol\(s\) not found|linker command failed", error.message, re.IGNORECASE)):
+        fine = EXPLANATIONS["linker_error"]
+        return {
+            "explanation": format_error(
+                what=error.message,
+                why=fine["why"],
+                how=fine["how"]
+            ),
+            "suggestion": fine["suggestion"],
+            "category": "linker_error",
+            "confidence": 0.95
+        }
+
     # 1. First, check the Common Errors Glossary
     common = lookup_common_error(error.message)
     if common:

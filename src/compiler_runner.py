@@ -64,6 +64,29 @@ def run_cpp_compiler(file_path, permissions=None):
                     "message": match.group(5),
                     "raw": line
                 })
+
+        # Bug 1.2: Check compiler returncode for linker errors if no line:col errors matched
+        if res.returncode != 0 and not errors:
+            stderr_text = res.stderr.strip()
+            sym_match = re.search(r'^\s*"([^"]+)",\s*referenced from:', stderr_text, re.MULTILINE)
+            if sym_match:
+                msg = f"undefined reference to '{sym_match.group(1)}'"
+            else:
+                undef_gcc = re.search(r"undefined reference to [`']?([^']+)'?", stderr_text)
+                if undef_gcc:
+                    msg = f"undefined reference to '{undef_gcc.group(1)}'"
+                else:
+                    msg = stderr_text.splitlines()[0] if stderr_text else "linker command failed"
+            errors.append({
+                "file": file_path,
+                "line": None,
+                "column": None,
+                "type": "error",
+                "message": msg,
+                "raw": stderr_text,
+                "category": "linker_error"
+            })
+
         return errors
 
     except FileNotFoundError:

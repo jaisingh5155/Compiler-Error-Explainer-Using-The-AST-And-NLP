@@ -43,10 +43,12 @@ def parse_errors(raw_output):
                 file=item.get("file"),
                 line=item.get("line"),
                 column=item.get("column"),
-                error_type=item.get("type"),
+                error_type=item.get("type", "error"),
                 message=item.get("message"),
                 raw=item.get("raw")
             )
+            if item.get("category"):
+                error_obj.category = item.get("category")
 
             if error_obj.file and error_obj.line:
                 if os.path.exists(error_obj.file):
@@ -77,16 +79,16 @@ def parse_errors(raw_output):
 
             message_text="\n".join(block)
 
-            errors.append(
-                CompilerError(
-                    file=None,
-                    line=None,
-                    column=None,
-                    error_type="linker",
-                    message=message_text,
-                    raw=message_text
-                )
+            linker_err = CompilerError(
+                file=None,
+                line=None,
+                column=None,
+                error_type="error",
+                message=message_text,
+                raw=message_text
             )
+            linker_err.category = "linker_error"
+            errors.append(linker_err)
             i += 1
             continue
 
