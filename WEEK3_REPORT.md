@@ -103,11 +103,22 @@ During Week 3, the project objective was to fix all 5 P0 bugs and feasible high-
   
 #### Definitive Provenance of `benchmark/return_type/rt03` Status Change
 An audit of git commit history for `benchmark/return_type/rt03_missing_return.json` definitively proves:
-1. `rt03_missing_return.json` was committed in [`ce6f51b`](file:///Users/jaisinghsaini/TOACD/cd1/benchmark/return_type/rt03_missing_return.json) with `"expected_status": "error"` and **has never been modified since**. A recursive git audit confirmed that **zero** benchmark `.json` metadata files were edited during Week 2 or Week 3.
+1. `rt03_missing_return.json` was committed in [`ce6f51b`](file:///Users/jaisinghsaini/TOACD/cd1/benchmark/return_type/rt03_missing_return.json) with `"expected_status": "error"` and had never been modified during Week 2 or Week 3. A recursive git audit confirmed that **zero** benchmark `.json` metadata files were edited during Week 2 or Week 3.
 2. The change in `rt03`'s result (Week 2: status matched; Week 3: status mismatch) was caused **100% by an actual tool behavior change from the Bug 1.1 fix in `main.py`**:
-   - In Week 2, any compiler output (even warnings) caused `main.py` to report `status: "error"`, which coincidentally matched `rt03.json`'s `"expected_status": "error"`.
+   - In Week 2, any compiler output (even warnings) caused `main.py` to report `status: "error"`, which coincidentally matched `rt03.json`'s initial `"expected_status": "error"`.
    - In Week 3, Bug 1.1 properly aligned status with compilation exit codes (`return_code == 0` -> `"success"`). Because Apple Clang treats missing return statements as non-fatal warnings by default (`-Wreturn-type`), `clang++` exits with `0`, and `main.py` correctly reports `"success"`.
-   - This created 1 status mismatch (64 -> 63), which was offset by **+9 new status matches** (+5 on previously unparsed `linker_errors/` via Bug 1.2, and +4 on warning-containing `clean/` files via Bug 1.1), resulting in exactly **63 + 9 = 72 status matches (92.3%)**.
+   - This initially created 1 status mismatch (64 -> 63), which was offset by **+9 new status matches** (+5 on previously unparsed `linker_errors/` via Bug 1.2, and +4 on warning-containing `clean/` files via Bug 1.1), resulting in 72/78 status matches (92.3%).
+
+#### Explicit Policy Decision on rt03: Ground-Truth Metadata Correction (Option A)
+Following review, an explicit policy decision was evaluated to resolve this discrepancy:
+- **Option (a) [Selected]:** Correct `rt03.json`'s `expected_status` to `"success"` since that reflects genuine Apple Clang default behavior (non-fatal warning with exit code 0).
+- **Option (b) [Rejected]:** Enforce missing-returns as hard errors by adding `-Werror=return-type` to `compiler_runner.py`.
+
+**Rationale for Selecting Option (a):**
+1. **Preservation of Native Compiler Semantics:** The system's purpose is to explain actual compiler behavior without imposing arbitrary compiler dialect restrictions. Under default Apple Clang, a missing return emits warning `-Wreturn-type` with exit code 0.
+2. **Benchmark Suite Consistency:** In `benchmark/warnings_only/wo06_missing_return_warning.json`, the exact same scenario is already defined as `"expected_status": "success"` (`notes: "missing return in non-void function, warning only on clang (exit 0)"`). Selecting Option (b) would inject `-Werror=return-type`, causing `wo06` to fail its expected status in the `warnings_only` suite.
+3. **Correction of Week 2 Circular Ground-Truth:** In Week 2, `rt03.json`'s notes noted `"(warning on clang)"`, yet its label was set to `"error"` merely because the buggy Week 2 tool output produced `"error"`. Correcting it eliminates circular labeling.
+4. **Auditability & Changelog:** `rt03.json` has been updated to `"expected_status": "success"`, and this ground-truth correction is explicitly logged in `BENCHMARK_RESULTS_WEEK3.csv`'s header changelog. Status accuracy is now cleanly reconciled at **73/78 (93.6%)**.
 
 ### Generalization Verification of Clang Dialect Normalization
 To ensure `_normalize_clang_dialect` generalizes beyond the exact phrasing of the benchmark files, an independent held-out evaluation was conducted using 5 completely novel C++ files (`tests/week3_verification/generalization/gen01`–`gen05`) with unseen variable names, function names, and structural contexts:

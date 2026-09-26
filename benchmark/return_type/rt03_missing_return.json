@@ -1,5 +1,5 @@
 {
-  "expected_status": "error",
+  "expected_status": "success",
   "expected_category": "return_type_error",
   "expected_line": 5,
   "cwe": null,

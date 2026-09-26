@@ -2,7 +2,7 @@
 # Date: 2026-09-25
 # Total benchmark files: 78
 #
-# STATUS ACCURACY: 72/78 (92.3%)
+# STATUS ACCURACY: 73/78 (93.6%)
 # CLASSIFICATION ACCURACY: 42/48 (87.5%)
 #
 # SECURITY SCANNER:
@@ -26,11 +26,11 @@
 #   CWE-78: 1/1 (100%)
 #
 # AUTO-HEALER:
-#   Attempted:      48
-#   compiled_clean:  17
+#   Attempted:      47
+#   compiled_clean:  16
 #   gave_up:         26
 #   crashed:         0
-#   success rate:    35.4%
+#   success rate:    34.0%
 #
 # TRAINING DATA MUTATION CHECK:
 #   Size before: 14719358 bytes, MD5: 0239658bf3b6c91064e89dba5e954d30
@@ -68,7 +68,7 @@ benchmark/security/sec15_decoy_safe_alloc.cpp,security,,success,success,True,,,,
 benchmark/security/sec16_decoy_safe_delete.cpp,security,,success,success,True,,,,,clean,clean,True,,"DECOY: properly deleted and nulled pointer, no UaF"
 benchmark/return_type/rt01_return_string_from_int.cpp,return_type,,error,error,True,return_type_error,return_type_error,True,1.0,clean,clean,True,gave_up,return hello from int main()
 benchmark/return_type/rt02_void_main.cpp,return_type,,error,error,True,return_type_error,return_type_error,True,0.9856,clean,clean,True,gave_up,void main() instead of int main()
-benchmark/return_type/rt03_missing_return.cpp,return_type,,error,success,False,return_type_error,return_type_error,True,1.0,clean,clean,True,compiled_clean,non-void function missing return statement (warning on clang)
+benchmark/return_type/rt03_missing_return.cpp,return_type,,success,success,True,return_type_error,return_type_error,True,1.0,clean,clean,True,,non-void function missing return statement (warning on clang)
 benchmark/return_type/rt04_return_void_from_int.cpp,return_type,,error,error,True,return_type_error,return_type_error,True,1.0,clean,clean,True,gave_up,non-void function with bare return;
 benchmark/linker_errors/lk01_undef_func.cpp,linker_errors,,error,error,True,linker_error,linker_error,True,0.95,clean,clean,True,no_errors_parsed,function declared but not defined
 benchmark/linker_errors/lk02_missing_main.cpp,linker_errors,,error,error,True,linker_error,linker_error,True,0.95,clean,clean,True,no_errors_parsed,no main() function defined

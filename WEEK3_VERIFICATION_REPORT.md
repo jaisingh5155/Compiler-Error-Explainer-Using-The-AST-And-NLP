@@ -106,7 +106,14 @@ To rigorously test whether `_normalize_clang_dialect` generalized or was overfit
   The change in `rt03`'s result was **(a) an actual tool behavior change** resulting from the Bug 1.1 fix:
   - In Week 2, `main.py` treated any stderr output as a compilation failure (`status: error`), which happened to match `rt03.json`'s `expected_status: error`.
   - In Week 3, Bug 1.1 corrected this: compilation success/failure is now governed by the compiler process exit code. On Apple Clang, a missing return statement is non-fatal warning `-Wreturn-type`; `clang++` exits with code `0`. `main.py` correctly reports `status: "success"`.
-  - This single new status mismatch (64 -> 63) was counterbalanced by **+9 new status matches** (+5 on linker errors via Bug 1.2, +4 on warning files in clean via Bug 1.1), bringing total status matches to **72/78 (92.3%)**.
+  - Prior to correcting `rt03.json`, this created 1 status mismatch (64 -> 63), counterbalanced by +9 new status matches (+5 on linker errors via Bug 1.2, +4 on warning files in clean via Bug 1.1), bringing total status matches to 72/78 (92.3%).
+- **Explicit Policy Decision & Ground-Truth Metadata Correction (Option A):**
+  - **Decision:** Selected Option (a) over Option (b). Corrected `benchmark/return_type/rt03_missing_return.json`'s `expected_status` from `"error"` to `"success"`.
+  - **Rationale:**
+    1. *Preserves Native Semantics:* Apple Clang genuinely emits `-Wreturn-type` as a warning with exit code 0; the tool should accurately diagnose compiler behavior rather than enforce compiler dialect policy.
+    2. *Maintains Benchmark Consistency:* `benchmark/warnings_only/wo06_missing_return_warning.json` already defines the exact same condition as `"expected_status": "success"`. Option (b) (adding `-Werror=return-type` to `compiler_runner.py`) would break `wo06` in the `warnings_only` suite.
+    3. *Eliminates Circular Ground-Truth:* `rt03.json`'s own notes noted `"(warning on clang)"` originally; `"expected_status": "error"` was set in Week 2 solely because the buggy tool output emitted `"error"`.
+  - **Impact:** Reconciled status accuracy is **73/78 (93.6%)**, fully documented in `BENCHMARK_RESULTS_WEEK3.csv`'s changelog.
 
 ### Question 8: Security Detector "Missing vs. Broken" Reclassification
 `BUG_REPORT.md` Phase 4 has been updated to cleanly separate the four 0%-recall CWEs into two distinct categories:
