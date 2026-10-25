@@ -1,0 +1,198 @@
+[
+  {
+    "filepath": "benchmark/missing_include/mi01_iostream.cpp",
+    "stdout": "Hello\n",
+    "returncode": 0,
+    "needs_stdin": false,
+    "stdin": null
+  },
+  {
+    "filepath": "benchmark/missing_include/mi02_vector.cpp",
+    "stdout": "3\n",
+    "returncode": 0,
+    "needs_stdin": false,
+    "stdin": null
+  },
+  {
+    "filepath": "benchmark/missing_include/mi03_string.cpp",
+    "stdout": "Alice\n",
+    "returncode": 0,
+    "needs_stdin": false,
+    "stdin": null
+  },
+  {
+    "filepath": "benchmark/missing_include/mi04_map.cpp",
+    "stdout": "30\n",
+    "returncode": 0,
+    "needs_stdin": false,
+    "stdin": null
+  },
+  {
+    "filepath": "benchmark/missing_include/mi05_vector_standalone.cpp",
+    "stdout": "",
+    "returncode": 0,
+    "needs_stdin": false,
+    "stdin": null
+  },
+  {
+    "filepath": "benchmark/missing_include/mi06_algorithm_sort.cpp",
+    "stdout": "",
+    "returncode": 0,
+    "needs_stdin": false,
+    "stdin": null
+  },
+  {
+    "filepath": "benchmark/missing_include/mi07_utility_pair.cpp",
+    "stdout": "",
+    "returncode": 0,
+    "needs_stdin": false,
+    "stdin": null
+  },
+  {
+    "filepath": "benchmark/multi_error/me02_redef_and_security.cpp",
+    "stdout": "",
+    "returncode": -5,
+    "needs_stdin": false,
+    "stdin": null
+  },
+  {
+    "filepath": "benchmark/multi_error/me03_missing_include_and_uaf.cpp",
+    "stdout": "4\n",
+    "returncode": 0,
+    "needs_stdin": false,
+    "stdin": null
+  },
+  {
+    "filepath": "benchmark/multi_error/me06_cascade_semicolons.cpp",
+    "stdout": "30\n",
+    "returncode": 0,
+    "needs_stdin": false,
+    "stdin": null
+  },
+  {
+    "filepath": "benchmark/multi_error/me07_cascade_class_errors.cpp",
+    "stdout": "1-46792488",
+    "returncode": 0,
+    "needs_stdin": false,
+    "stdin": null
+  },
+  {
+    "filepath": "benchmark/name_resolution/nr02_undeclared_result.cpp",
+    "stdout": "Result: 8\n",
+    "returncode": 0,
+    "needs_stdin": false,
+    "stdin": null
+  },
+  {
+    "filepath": "benchmark/name_resolution/nr03_keyword_retrun.cpp",
+    "stdout": "3 + 4 = 7\n",
+    "returncode": 0,
+    "needs_stdin": false,
+    "stdin": null
+  },
+  {
+    "filepath": "benchmark/name_resolution/nr06_misspelled_ident.cpp",
+    "stdout": "0\n",
+    "returncode": 0,
+    "needs_stdin": false,
+    "stdin": null
+  },
+  {
+    "filepath": "benchmark/name_resolution/nr07_missing_std_prefix.cpp",
+    "stdout": "hello\n",
+    "returncode": 0,
+    "needs_stdin": false,
+    "stdin": null
+  },
+  {
+    "filepath": "benchmark/redefinition/rd03_local_redef.cpp",
+    "stdout": "10\n",
+    "returncode": 0,
+    "needs_stdin": false,
+    "stdin": null
+  },
+  {
+    "filepath": "benchmark/return_type/rt02_void_main.cpp",
+    "stdout": "Wrong main signature",
+    "returncode": 0,
+    "needs_stdin": false,
+    "stdin": null
+  },
+  {
+    "filepath": "benchmark/syntax/sx01_missing_semi_decl.cpp",
+    "stdout": "10\n",
+    "returncode": 0,
+    "needs_stdin": false,
+    "stdin": null
+  },
+  {
+    "filepath": "benchmark/syntax/sx02_missing_semi_multi.cpp",
+    "stdout": "Sum = 30\n",
+    "returncode": 0,
+    "needs_stdin": false,
+    "stdin": null
+  },
+  {
+    "filepath": "benchmark/syntax/sx03_missing_brace.cpp",
+    "stdout": "Hello, Alice!\nHello, Stranger!\n",
+    "returncode": 0,
+    "needs_stdin": false,
+    "stdin": null
+  },
+  {
+    "filepath": "benchmark/syntax/sx04_missing_semi_string.cpp",
+    "stdout": "Hello",
+    "returncode": 0,
+    "needs_stdin": false,
+    "stdin": null
+  },
+  {
+    "filepath": "benchmark/syntax/sx06_extra_semi_struct.cpp",
+    "stdout": "",
+    "returncode": 0,
+    "needs_stdin": false,
+    "stdin": null
+  },
+  {
+    "filepath": "benchmark/syntax/sx07_unmatched_paren.cpp",
+    "stdout": "7\n",
+    "returncode": 0,
+    "needs_stdin": false,
+    "stdin": null
+  },
+  {
+    "filepath": "benchmark/syntax/sx08_double_semi_func_scope.cpp",
+    "stdout": "3\n",
+    "returncode": 0,
+    "needs_stdin": false,
+    "stdin": null
+  },
+  {
+    "filepath": "benchmark/syntax/sx11_nested_bracket_mismatch.cpp",
+    "stdout": "inside block\n",
+    "returncode": 0,
+    "needs_stdin": false,
+    "stdin": null
+  },
+  {
+    "filepath": "benchmark/syntax/sx12_brackets_in_string.cpp",
+    "stdout": "59",
+    "returncode": 0,
+    "needs_stdin": false,
+    "stdin": null
+  },
+  {
+    "filepath": "benchmark/syntax/sx13_deeply_nested_unclosed.cpp",
+    "stdout": "deeply nested\n",
+    "returncode": 0,
+    "needs_stdin": false,
+    "stdin": null
+  },
+  {
+    "filepath": "benchmark/type_errors/te05_wrong_stream_op.cpp",
+    "stdout": "Enter your age: You are 25 years old.\n",
+    "returncode": 0,
+    "needs_stdin": true,
+    "stdin": "25\n"
+  }
+]

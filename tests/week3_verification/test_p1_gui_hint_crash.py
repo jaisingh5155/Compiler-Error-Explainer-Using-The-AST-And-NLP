@@ -14,6 +14,13 @@ sys.path.insert(0, os.path.join(project_root, "src"))
 
 # Set offscreen Qt platform
 os.environ["QT_QPA_PLATFORM"] = "offscreen"
+try:
+    import PyQt6
+    qt_plugins = os.path.join(os.path.dirname(PyQt6.__file__), "Qt6", "plugins")
+    if os.path.exists(qt_plugins):
+        os.environ["QT_PLUGIN_PATH"] = qt_plugins
+except Exception:
+    pass
 
 def test_gui_hint_retry_no_crash():
     from PyQt6.QtWidgets import QApplication

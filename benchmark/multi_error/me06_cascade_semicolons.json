@@ -1,0 +1,9 @@
+{
+  "expected_status": "error",
+  "expected_category": "syntax_error",
+  "expected_line": 5,
+  "cwe": null,
+  "expected_security_verdict": "clean",
+  "notes": "Two missing semicolons produce cascading parse errors that should group under a single root cause",
+  "expected_output": "30\n"
+}

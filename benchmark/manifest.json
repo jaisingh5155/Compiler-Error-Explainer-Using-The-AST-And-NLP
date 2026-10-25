@@ -1,0 +1,926 @@
+{
+  "version": "1.0.0",
+  "description": "Canonical benchmark manifest \u2014 single source of truth for all metric denominators.",
+  "generated_from": "benchmark/*.json metadata files",
+  "denominators": {
+    "total": 97,
+    "status_accuracy": 97,
+    "classification": 54,
+    "healer": 53,
+    "compiled_clean": 24,
+    "compiled_clean_with_security_findings": 2,
+    "security_vulnerable": 17,
+    "security_clean": 80,
+    "repair_correctness": 24
+  },
+  "denominator_definitions": {
+    "status_accuracy": "97 canonically includes all 97 benchmark files. Justification: benchmark/optimization/opt01-opt04 and clean missing_include targets (mi02, mi03, me03 on Apple Clang) are valid, self-contained C++ programs that compile cleanly with exit code 0 under Apple Clang (expected_status: 'success'), providing real compile-success ground truth.",
+    "classification": "54 files with non-null expected_category (genuine compiler error diagnostic targets on Apple Clang).",
+    "healer": "53 files with expected_status == 'error' genuinely requiring automated repair on Apple Clang.",
+    "compiled_clean": "24 healed targets that compile cleanly with 0 compiler errors and 0 security findings.",
+    "compiled_clean_with_security_findings": "2 healed targets that compile cleanly with 0 compiler errors but retain confirmed security findings / memory safety vulnerabilities (me02: double-free CWE-415, me07: uninitialized memory read CWE-457; me03 is re-labeled as an already-compiling baseline vulnerability).",
+    "security_vulnerable": "17 files with confirmed CWE vulnerability ground truth.",
+    "security_clean": "80 files with expected_security_verdict == 'clean' (16 explicit decoy/clean + 64 other clean files).",
+    "repair_correctness": "24 deterministic healed programs evaluated against non-circular, independently derived expected_output oracles on Apple Clang."
+  },
+  "cwe_breakdown": {
+    "CWE-415": 2,
+    "CWE-416": 2,
+    "CWE-190": 2,
+    "CWE-78": 1,
+    "CWE-120": 2,
+    "CWE-134": 1,
+    "CWE-476": 4,
+    "CWE-457": 2,
+    "CWE-401": 1
+  },
+  "category_breakdown": {
+    "clean": 8,
+    "linker_errors": 5,
+    "missing_include": 7,
+    "multi_error": 7,
+    "name_resolution": 8,
+    "optimization": 4,
+    "redefinition": 4,
+    "return_type": 4,
+    "security": 22,
+    "syntax": 14,
+    "type_errors": 8,
+    "warnings_only": 6
+  },
+  "files": [
+    {
+      "filepath": "benchmark/clean/cl01_hello.cpp",
+      "category_dir": "clean",
+      "expected_status": "success",
+      "expected_category": null,
+      "expected_security_verdict": "clean",
+      "cwe": null,
+      "notes": "simple hello world"
+    },
+    {
+      "filepath": "benchmark/clean/cl02_math.cpp",
+      "category_dir": "clean",
+      "expected_status": "success",
+      "expected_category": null,
+      "expected_security_verdict": "clean",
+      "cwe": null,
+      "notes": "math functions, no errors"
+    },
+    {
+      "filepath": "benchmark/clean/cl03_loops.cpp",
+      "category_dir": "clean",
+      "expected_status": "success",
+      "expected_category": null,
+      "expected_security_verdict": "clean",
+      "cwe": null,
+      "notes": "simple loop, no errors"
+    },
+    {
+      "filepath": "benchmark/clean/cl04_struct.cpp",
+      "category_dir": "clean",
+      "expected_status": "success",
+      "expected_category": null,
+      "expected_security_verdict": "clean",
+      "cwe": null,
+      "notes": "struct usage, no errors"
+    },
+    {
+      "filepath": "benchmark/clean/cl05_class.cpp",
+      "category_dir": "clean",
+      "expected_status": "success",
+      "expected_category": null,
+      "expected_security_verdict": "clean",
+      "cwe": null,
+      "notes": "class with constructor and method, no errors"
+    },
+    {
+      "filepath": "benchmark/clean/cl06_vector.cpp",
+      "category_dir": "clean",
+      "expected_status": "success",
+      "expected_category": null,
+      "expected_security_verdict": "clean",
+      "cwe": null,
+      "notes": "vector with sort, no errors"
+    },
+    {
+      "filepath": "benchmark/clean/cl07_functions.cpp",
+      "category_dir": "clean",
+      "expected_status": "success",
+      "expected_category": null,
+      "expected_security_verdict": "clean",
+      "cwe": null,
+      "notes": "recursive function, no errors"
+    },
+    {
+      "filepath": "benchmark/clean/cl08_pointers.cpp",
+      "category_dir": "clean",
+      "expected_status": "success",
+      "expected_category": null,
+      "expected_security_verdict": "clean",
+      "cwe": null,
+      "notes": "valid pointer and reference usage"
+    },
+    {
+      "filepath": "benchmark/linker_errors/lk01_undef_func.cpp",
+      "category_dir": "linker_errors",
+      "expected_status": "error",
+      "expected_category": "linker_error",
+      "expected_security_verdict": "clean",
+      "cwe": null,
+      "notes": "function declared but not defined"
+    },
+    {
+      "filepath": "benchmark/linker_errors/lk02_missing_main.cpp",
+      "category_dir": "linker_errors",
+      "expected_status": "error",
+      "expected_category": "linker_error",
+      "expected_security_verdict": "clean",
+      "cwe": null,
+      "notes": "no main() function defined"
+    },
+    {
+      "filepath": "benchmark/linker_errors/lk03_undef_class_method.cpp",
+      "category_dir": "linker_errors",
+      "expected_status": "error",
+      "expected_category": "linker_error",
+      "expected_security_verdict": "clean",
+      "cwe": null,
+      "notes": "class method declared but not defined"
+    },
+    {
+      "filepath": "benchmark/linker_errors/lk04_undef_extern_var.cpp",
+      "category_dir": "linker_errors",
+      "expected_status": "error",
+      "expected_category": "linker_error",
+      "expected_security_verdict": "clean",
+      "cwe": null,
+      "notes": "extern variable declared but not defined"
+    },
+    {
+      "filepath": "benchmark/linker_errors/lk05_undef_template_spec.cpp",
+      "category_dir": "linker_errors",
+      "expected_status": "error",
+      "expected_category": "linker_error",
+      "expected_security_verdict": "clean",
+      "cwe": null,
+      "notes": "template function declared but not instantiated/defined"
+    },
+    {
+      "filepath": "benchmark/missing_include/mi01_iostream.cpp",
+      "category_dir": "missing_include",
+      "expected_status": "error",
+      "expected_category": "missing_include",
+      "expected_security_verdict": "clean",
+      "cwe": null,
+      "notes": "cout used without #include <iostream>"
+    },
+    {
+      "filepath": "benchmark/missing_include/mi02_vector.cpp",
+      "category_dir": "missing_include",
+      "expected_status": "success",
+      "expected_category": null,
+      "expected_security_verdict": "clean",
+      "cwe": null,
+      "notes": "vector used without #include <vector>; compiles clean on Apple Clang/libc++ due to transitive includes from <iostream>"
+    },
+    {
+      "filepath": "benchmark/missing_include/mi03_string.cpp",
+      "category_dir": "missing_include",
+      "expected_status": "success",
+      "expected_category": null,
+      "expected_security_verdict": "clean",
+      "cwe": null,
+      "notes": "string used without #include <string>; compiles clean on Apple Clang/libc++ due to transitive includes from <iostream>"
+    },
+    {
+      "filepath": "benchmark/missing_include/mi04_map.cpp",
+      "category_dir": "missing_include",
+      "expected_status": "error",
+      "expected_category": "missing_include",
+      "expected_security_verdict": "clean",
+      "cwe": null,
+      "notes": "map and string used without includes"
+    },
+    {
+      "filepath": "benchmark/missing_include/mi05_vector_standalone.cpp",
+      "category_dir": "missing_include",
+      "expected_status": "error",
+      "expected_category": "missing_include",
+      "expected_security_verdict": "clean",
+      "cwe": null,
+      "notes": "vector used without #include <vector>"
+    },
+    {
+      "filepath": "benchmark/missing_include/mi06_algorithm_sort.cpp",
+      "category_dir": "missing_include",
+      "expected_status": "error",
+      "expected_category": "missing_include",
+      "expected_security_verdict": "clean",
+      "cwe": null,
+      "notes": "std::sort used without #include <algorithm>"
+    },
+    {
+      "filepath": "benchmark/missing_include/mi07_utility_pair.cpp",
+      "category_dir": "missing_include",
+      "expected_status": "error",
+      "expected_category": "missing_include",
+      "expected_security_verdict": "clean",
+      "cwe": null,
+      "notes": "pair/make_pair used without #include <utility>"
+    },
+    {
+      "filepath": "benchmark/multi_error/me01_syntax_and_type.cpp",
+      "category_dir": "multi_error",
+      "expected_status": "error",
+      "expected_category": "syntax_error",
+      "expected_security_verdict": "clean",
+      "cwe": null,
+      "notes": "missing semicolon AND type mismatch (int = string literal), two independent errors"
+    },
+    {
+      "filepath": "benchmark/multi_error/me02_redef_and_security.cpp",
+      "category_dir": "multi_error",
+      "expected_status": "error",
+      "expected_category": "redefinition",
+      "expected_security_verdict": "vulnerable",
+      "cwe": "CWE-415",
+      "notes": "redefinition error blocks compilation; double-free should still be found by security scanner"
+    },
+    {
+      "filepath": "benchmark/multi_error/me03_missing_include_and_uaf.cpp",
+      "category_dir": "multi_error",
+      "expected_status": "success",
+      "expected_category": null,
+      "expected_security_verdict": "vulnerable",
+      "cwe": "CWE-416",
+      "notes": "missing #include <vector> AND use-after-free; compiles clean on Apple Clang/libc++ due to transitive includes from <iostream>, with pre-existing CWE-416 vulnerability"
+    },
+    {
+      "filepath": "benchmark/multi_error/me04_name_and_overflow.cpp",
+      "category_dir": "multi_error",
+      "expected_status": "error",
+      "expected_category": "name_resolution",
+      "expected_security_verdict": "vulnerable",
+      "cwe": "CWE-190",
+      "notes": "undeclared y AND integer overflow; tests if security scanner works alongside compile error"
+    },
+    {
+      "filepath": "benchmark/multi_error/me05_two_type_errors.cpp",
+      "category_dir": "multi_error",
+      "expected_status": "error",
+      "expected_category": "type_error",
+      "expected_security_verdict": "clean",
+      "cwe": null,
+      "notes": "two independent type errors in same function"
+    },
+    {
+      "filepath": "benchmark/multi_error/me06_cascade_semicolons.cpp",
+      "category_dir": "multi_error",
+      "expected_status": "error",
+      "expected_category": "syntax_error",
+      "expected_security_verdict": "clean",
+      "cwe": null,
+      "notes": "Two missing semicolons produce cascading parse errors that should group under a single root cause"
+    },
+    {
+      "filepath": "benchmark/multi_error/me07_cascade_class_errors.cpp",
+      "category_dir": "multi_error",
+      "expected_status": "error",
+      "expected_category": "syntax_error",
+      "expected_security_verdict": "clean",
+      "cwe": null,
+      "notes": "Missing semicolon in struct definition cascades into downstream undeclared identifier error"
+    },
+    {
+      "filepath": "benchmark/name_resolution/nr01_undeclared_var.cpp",
+      "category_dir": "name_resolution",
+      "expected_status": "error",
+      "expected_category": "name_resolution",
+      "expected_security_verdict": "clean",
+      "cwe": null,
+      "notes": "use of undeclared identifier y"
+    },
+    {
+      "filepath": "benchmark/name_resolution/nr02_undeclared_result.cpp",
+      "category_dir": "name_resolution",
+      "expected_status": "error",
+      "expected_category": "name_resolution",
+      "expected_security_verdict": "clean",
+      "cwe": null,
+      "notes": "use of undeclared identifier result"
+    },
+    {
+      "filepath": "benchmark/name_resolution/nr03_keyword_retrun.cpp",
+      "category_dir": "name_resolution",
+      "expected_status": "error",
+      "expected_category": "name_resolution",
+      "expected_security_verdict": "clean",
+      "cwe": null,
+      "notes": "keyword typo retrun instead of return"
+    },
+    {
+      "filepath": "benchmark/name_resolution/nr04_keyword_cosnt.cpp",
+      "category_dir": "name_resolution",
+      "expected_status": "error",
+      "expected_category": "name_resolution",
+      "expected_security_verdict": "clean",
+      "cwe": null,
+      "notes": "keyword typo cosnt instead of const"
+    },
+    {
+      "filepath": "benchmark/name_resolution/nr05_undeclared_func.cpp",
+      "category_dir": "name_resolution",
+      "expected_status": "error",
+      "expected_category": "name_resolution",
+      "expected_security_verdict": "clean",
+      "cwe": null,
+      "notes": "call to undeclared function computeSum"
+    },
+    {
+      "filepath": "benchmark/name_resolution/nr06_misspelled_ident.cpp",
+      "category_dir": "name_resolution",
+      "expected_status": "error",
+      "expected_category": "name_resolution",
+      "expected_security_verdict": "clean",
+      "cwe": null,
+      "notes": "misspelled variable name countr instead of counter"
+    },
+    {
+      "filepath": "benchmark/name_resolution/nr07_missing_std_prefix.cpp",
+      "category_dir": "name_resolution",
+      "expected_status": "error",
+      "expected_category": "name_resolution",
+      "expected_security_verdict": "clean",
+      "cwe": null,
+      "notes": "cout/endl used without using namespace std or std:: prefix"
+    },
+    {
+      "filepath": "benchmark/name_resolution/nr08_wrong_scope.cpp",
+      "category_dir": "name_resolution",
+      "expected_status": "error",
+      "expected_category": "name_resolution",
+      "expected_security_verdict": "clean",
+      "cwe": null,
+      "notes": "variable temp used outside its for-loop scope"
+    },
+    {
+      "filepath": "benchmark/optimization/opt01_dead_code.cpp",
+      "category_dir": "optimization",
+      "expected_status": "success",
+      "expected_category": null,
+      "expected_security_verdict": "clean",
+      "cwe": null,
+      "notes": "Optimization test: opt01_dead_code"
+    },
+    {
+      "filepath": "benchmark/optimization/opt02_redundant_computation.cpp",
+      "category_dir": "optimization",
+      "expected_status": "success",
+      "expected_category": null,
+      "expected_security_verdict": "clean",
+      "cwe": null,
+      "notes": "Optimization test: opt02_redundant_computation"
+    },
+    {
+      "filepath": "benchmark/optimization/opt03_modern_nullptr.cpp",
+      "category_dir": "optimization",
+      "expected_status": "success",
+      "expected_category": null,
+      "expected_security_verdict": "clean",
+      "cwe": null,
+      "notes": "Optimization test: opt03_modern_nullptr"
+    },
+    {
+      "filepath": "benchmark/optimization/opt04_const_ref_param.cpp",
+      "category_dir": "optimization",
+      "expected_status": "success",
+      "expected_category": null,
+      "expected_security_verdict": "clean",
+      "cwe": null,
+      "notes": "Optimization test: opt04_const_ref_param"
+    },
+    {
+      "filepath": "benchmark/redefinition/rd01_global_var.cpp",
+      "category_dir": "redefinition",
+      "expected_status": "error",
+      "expected_category": "redefinition",
+      "expected_security_verdict": "clean",
+      "cwe": null,
+      "notes": "global int x redefined"
+    },
+    {
+      "filepath": "benchmark/redefinition/rd02_duplicate_func.cpp",
+      "category_dir": "redefinition",
+      "expected_status": "error",
+      "expected_category": "redefinition",
+      "expected_security_verdict": "clean",
+      "cwe": null,
+      "notes": "function foo() defined twice"
+    },
+    {
+      "filepath": "benchmark/redefinition/rd03_local_redef.cpp",
+      "category_dir": "redefinition",
+      "expected_status": "error",
+      "expected_category": "redefinition",
+      "expected_security_verdict": "clean",
+      "cwe": null,
+      "notes": "local variable x redefined in same scope"
+    },
+    {
+      "filepath": "benchmark/redefinition/rd04_enum_redef.cpp",
+      "category_dir": "redefinition",
+      "expected_status": "error",
+      "expected_category": "redefinition",
+      "expected_security_verdict": "clean",
+      "cwe": null,
+      "notes": "enum Color redefined"
+    },
+    {
+      "filepath": "benchmark/return_type/rt01_return_string_from_int.cpp",
+      "category_dir": "return_type",
+      "expected_status": "error",
+      "expected_category": "return_type_error",
+      "expected_security_verdict": "clean",
+      "cwe": null,
+      "notes": "return hello from int main()"
+    },
+    {
+      "filepath": "benchmark/return_type/rt02_void_main.cpp",
+      "category_dir": "return_type",
+      "expected_status": "error",
+      "expected_category": "return_type_error",
+      "expected_security_verdict": "clean",
+      "cwe": null,
+      "notes": "void main() instead of int main()"
+    },
+    {
+      "filepath": "benchmark/return_type/rt03_missing_return.cpp",
+      "category_dir": "return_type",
+      "expected_status": "success",
+      "expected_category": "return_type_error",
+      "expected_security_verdict": "clean",
+      "cwe": null,
+      "notes": "non-void function missing return statement (warning on clang)"
+    },
+    {
+      "filepath": "benchmark/return_type/rt04_return_void_from_int.cpp",
+      "category_dir": "return_type",
+      "expected_status": "error",
+      "expected_category": "return_type_error",
+      "expected_security_verdict": "clean",
+      "cwe": null,
+      "notes": "non-void function with bare return;"
+    },
+    {
+      "filepath": "benchmark/security/sec01_cmd_inject.cpp",
+      "category_dir": "security",
+      "expected_status": "success",
+      "expected_category": null,
+      "expected_security_verdict": "vulnerable",
+      "cwe": "CWE-78",
+      "notes": "command injection via system() with user input"
+    },
+    {
+      "filepath": "benchmark/security/sec02_gets_overflow.cpp",
+      "category_dir": "security",
+      "expected_status": "success",
+      "expected_category": null,
+      "expected_security_verdict": "vulnerable",
+      "cwe": "CWE-120",
+      "notes": "buffer overflow via gets()"
+    },
+    {
+      "filepath": "benchmark/security/sec03_strcpy_overflow.cpp",
+      "category_dir": "security",
+      "expected_status": "success",
+      "expected_category": null,
+      "expected_security_verdict": "vulnerable",
+      "cwe": "CWE-120",
+      "notes": "buffer overflow via strcpy without bounds check"
+    },
+    {
+      "filepath": "benchmark/security/sec04_format_string.cpp",
+      "category_dir": "security",
+      "expected_status": "success",
+      "expected_category": null,
+      "expected_security_verdict": "vulnerable",
+      "cwe": "CWE-134",
+      "notes": "format string vulnerability: printf with user-controlled format"
+    },
+    {
+      "filepath": "benchmark/security/sec05_use_after_free.cpp",
+      "category_dir": "security",
+      "expected_status": "success",
+      "expected_category": null,
+      "expected_security_verdict": "vulnerable",
+      "cwe": "CWE-416",
+      "notes": "use-after-free: deref deleted pointer"
+    },
+    {
+      "filepath": "benchmark/security/sec06_double_free.cpp",
+      "category_dir": "security",
+      "expected_status": "success",
+      "expected_category": null,
+      "expected_security_verdict": "vulnerable",
+      "cwe": "CWE-415",
+      "notes": "double-free on same pointer"
+    },
+    {
+      "filepath": "benchmark/security/sec07_null_deref_direct.cpp",
+      "category_dir": "security",
+      "expected_status": "success",
+      "expected_category": null,
+      "expected_security_verdict": "vulnerable",
+      "cwe": "CWE-476",
+      "notes": "null pointer dereference: direct"
+    },
+    {
+      "filepath": "benchmark/security/sec08_null_deref_struct.cpp",
+      "category_dir": "security",
+      "expected_status": "success",
+      "expected_category": null,
+      "expected_security_verdict": "vulnerable",
+      "cwe": "CWE-476",
+      "notes": "null pointer dereference through struct member"
+    },
+    {
+      "filepath": "benchmark/security/sec09_null_deref_return.cpp",
+      "category_dir": "security",
+      "expected_status": "success",
+      "expected_category": null,
+      "expected_security_verdict": "vulnerable",
+      "cwe": "CWE-476",
+      "notes": "null deref from function returning nullptr without check"
+    },
+    {
+      "filepath": "benchmark/security/sec10_integer_overflow.cpp",
+      "category_dir": "security",
+      "expected_status": "success",
+      "expected_category": null,
+      "expected_security_verdict": "vulnerable",
+      "cwe": "CWE-190",
+      "notes": "signed integer overflow"
+    },
+    {
+      "filepath": "benchmark/security/sec11_uninit_use.cpp",
+      "category_dir": "security",
+      "expected_status": "success",
+      "expected_category": null,
+      "expected_security_verdict": "vulnerable",
+      "cwe": "CWE-457",
+      "notes": "use of uninitialized variable"
+    },
+    {
+      "filepath": "benchmark/security/sec12_memory_leak.cpp",
+      "category_dir": "security",
+      "expected_status": "success",
+      "expected_category": null,
+      "expected_security_verdict": "vulnerable",
+      "cwe": "CWE-401",
+      "notes": "memory leak: malloc in loop without free"
+    },
+    {
+      "filepath": "benchmark/security/sec13_decoy_filesystem.cpp",
+      "category_dir": "security",
+      "expected_status": "success",
+      "expected_category": null,
+      "expected_security_verdict": "clean",
+      "cwe": null,
+      "notes": "DECOY: function named filesystem() is safe, not command injection"
+    },
+    {
+      "filepath": "benchmark/security/sec14_decoy_safe_printf.cpp",
+      "category_dir": "security",
+      "expected_status": "success",
+      "expected_category": null,
+      "expected_security_verdict": "clean",
+      "cwe": null,
+      "notes": "DECOY: printf with string literals, no format string vuln"
+    },
+    {
+      "filepath": "benchmark/security/sec15_decoy_safe_alloc.cpp",
+      "category_dir": "security",
+      "expected_status": "success",
+      "expected_category": null,
+      "expected_security_verdict": "clean",
+      "cwe": null,
+      "notes": "DECOY: properly allocated and freed memory"
+    },
+    {
+      "filepath": "benchmark/security/sec16_decoy_safe_delete.cpp",
+      "category_dir": "security",
+      "expected_status": "success",
+      "expected_category": null,
+      "expected_security_verdict": "clean",
+      "cwe": null,
+      "notes": "DECOY: properly deleted and nulled pointer, no UaF"
+    },
+    {
+      "filepath": "benchmark/security/sec17_null_check_guarded.cpp",
+      "category_dir": "security",
+      "expected_status": "success",
+      "expected_category": null,
+      "expected_security_verdict": "clean",
+      "cwe": null,
+      "notes": "guarded null check prevents dereference when null"
+    },
+    {
+      "filepath": "benchmark/security/sec18_null_reassigned_valid.cpp",
+      "category_dir": "security",
+      "expected_status": "success",
+      "expected_category": null,
+      "expected_security_verdict": "clean",
+      "cwe": null,
+      "notes": "pointer reassigned to valid address before dereference"
+    },
+    {
+      "filepath": "benchmark/security/sec19_null_deref_struct_arrow.cpp",
+      "category_dir": "security",
+      "expected_status": "success",
+      "expected_category": null,
+      "expected_security_verdict": "vulnerable",
+      "cwe": "CWE-476",
+      "notes": "null pointer dereference through struct member access pt->x"
+    },
+    {
+      "filepath": "benchmark/security/sec20_uninit_all_branches.cpp",
+      "category_dir": "security",
+      "expected_status": "success",
+      "expected_category": null,
+      "expected_security_verdict": "clean",
+      "cwe": null,
+      "notes": "variable initialized in all branches before use"
+    },
+    {
+      "filepath": "benchmark/security/sec21_uninit_branch_leak.cpp",
+      "category_dir": "security",
+      "expected_status": "success",
+      "expected_category": null,
+      "expected_security_verdict": "vulnerable",
+      "cwe": "CWE-457",
+      "notes": "uninitialized variable used in else branch"
+    },
+    {
+      "filepath": "benchmark/security/sec22_uninit_output_param.cpp",
+      "category_dir": "security",
+      "expected_status": "success",
+      "expected_category": null,
+      "expected_security_verdict": "clean",
+      "cwe": null,
+      "notes": "output parameter pattern passed by address is initialized before use"
+    },
+    {
+      "filepath": "benchmark/syntax/sx01_missing_semi_decl.cpp",
+      "category_dir": "syntax",
+      "expected_status": "error",
+      "expected_category": "syntax_error",
+      "expected_security_verdict": "clean",
+      "cwe": null,
+      "notes": "missing semicolon after int x = 10"
+    },
+    {
+      "filepath": "benchmark/syntax/sx02_missing_semi_multi.cpp",
+      "category_dir": "syntax",
+      "expected_status": "error",
+      "expected_category": "syntax_error",
+      "expected_security_verdict": "clean",
+      "cwe": null,
+      "notes": "missing semicolon, two variable declarations"
+    },
+    {
+      "filepath": "benchmark/syntax/sx03_missing_brace.cpp",
+      "category_dir": "syntax",
+      "expected_status": "error",
+      "expected_category": "syntax_error",
+      "expected_security_verdict": "clean",
+      "cwe": null,
+      "notes": "missing closing brace for function greet()"
+    },
+    {
+      "filepath": "benchmark/syntax/sx04_missing_semi_string.cpp",
+      "category_dir": "syntax",
+      "expected_status": "error",
+      "expected_category": "syntax_error",
+      "expected_security_verdict": "clean",
+      "cwe": null,
+      "notes": "missing semicolon after cout string literal (misnamed file)"
+    },
+    {
+      "filepath": "benchmark/syntax/sx05_missing_paren.cpp",
+      "category_dir": "syntax",
+      "expected_status": "error",
+      "expected_category": "syntax_error",
+      "expected_security_verdict": "clean",
+      "cwe": null,
+      "notes": "missing parentheses around if condition"
+    },
+    {
+      "filepath": "benchmark/syntax/sx06_extra_semi_struct.cpp",
+      "category_dir": "syntax",
+      "expected_status": "error",
+      "expected_category": "syntax_error",
+      "expected_security_verdict": "clean",
+      "cwe": null,
+      "notes": "missing semicolon after struct definition"
+    },
+    {
+      "filepath": "benchmark/syntax/sx07_unmatched_paren.cpp",
+      "category_dir": "syntax",
+      "expected_status": "error",
+      "expected_category": "syntax_error",
+      "expected_security_verdict": "clean",
+      "cwe": null,
+      "notes": "unmatched opening parenthesis"
+    },
+    {
+      "filepath": "benchmark/syntax/sx08_double_semi_func_scope.cpp",
+      "category_dir": "syntax",
+      "expected_status": "error",
+      "expected_category": "syntax_error",
+      "expected_security_verdict": "clean",
+      "cwe": null,
+      "notes": "missing semicolon in return statement inside helper function"
+    },
+    {
+      "filepath": "benchmark/syntax/sx09_missing_template_close.cpp",
+      "category_dir": "syntax",
+      "expected_status": "error",
+      "expected_category": "syntax_error",
+      "expected_security_verdict": "clean",
+      "cwe": null,
+      "notes": "missing closing > in template argument"
+    },
+    {
+      "filepath": "benchmark/syntax/sx10_break_outside_loop.cpp",
+      "category_dir": "syntax",
+      "expected_status": "error",
+      "expected_category": "syntax_error",
+      "expected_security_verdict": "clean",
+      "cwe": null,
+      "notes": "break statement outside loop"
+    },
+    {
+      "filepath": "benchmark/syntax/sx11_nested_bracket_mismatch.cpp",
+      "category_dir": "syntax",
+      "expected_status": "error",
+      "expected_category": "syntax_error",
+      "expected_security_verdict": "clean",
+      "cwe": null,
+      "notes": "unclosed if block brace before function main"
+    },
+    {
+      "filepath": "benchmark/syntax/sx12_brackets_in_string.cpp",
+      "category_dir": "syntax",
+      "expected_status": "error",
+      "expected_category": "syntax_error",
+      "expected_security_verdict": "clean",
+      "cwe": null,
+      "notes": "unclosed parenthesis following string with braces"
+    },
+    {
+      "filepath": "benchmark/syntax/sx13_deeply_nested_unclosed.cpp",
+      "category_dir": "syntax",
+      "expected_status": "error",
+      "expected_category": "syntax_error",
+      "expected_security_verdict": "clean",
+      "cwe": null,
+      "notes": "deeply nested unclosed if brace inside for loop"
+    },
+    {
+      "filepath": "benchmark/syntax/sx14_mismatched_paren_bracket.cpp",
+      "category_dir": "syntax",
+      "expected_status": "error",
+      "expected_category": "syntax_error",
+      "expected_security_verdict": "clean",
+      "cwe": null,
+      "notes": "bracket opened with [ closed with )"
+    },
+    {
+      "filepath": "benchmark/type_errors/te01_int_to_charptr.cpp",
+      "category_dir": "type_errors",
+      "expected_status": "error",
+      "expected_category": "type_error",
+      "expected_security_verdict": "clean",
+      "cwe": null,
+      "notes": "cannot init char* with int"
+    },
+    {
+      "filepath": "benchmark/type_errors/te02_int_plus_string.cpp",
+      "category_dir": "type_errors",
+      "expected_status": "error",
+      "expected_category": "type_error",
+      "expected_security_verdict": "clean",
+      "cwe": null,
+      "notes": "invalid operands int + string"
+    },
+    {
+      "filepath": "benchmark/type_errors/te03_void_to_int.cpp",
+      "category_dir": "type_errors",
+      "expected_status": "error",
+      "expected_category": "type_error",
+      "expected_security_verdict": "clean",
+      "cwe": null,
+      "notes": "assigning void function result to int"
+    },
+    {
+      "filepath": "benchmark/type_errors/te04_wrong_arg_count.cpp",
+      "category_dir": "type_errors",
+      "expected_status": "error",
+      "expected_category": "type_error",
+      "expected_security_verdict": "clean",
+      "cwe": null,
+      "notes": "too many arguments to function foo"
+    },
+    {
+      "filepath": "benchmark/type_errors/te05_wrong_stream_op.cpp",
+      "category_dir": "type_errors",
+      "expected_status": "error",
+      "expected_category": "type_error",
+      "expected_security_verdict": "clean",
+      "cwe": null,
+      "notes": "cin << instead of cin >>"
+    },
+    {
+      "filepath": "benchmark/type_errors/te06_deref_non_pointer.cpp",
+      "category_dir": "type_errors",
+      "expected_status": "error",
+      "expected_category": "type_error",
+      "expected_security_verdict": "clean",
+      "cwe": null,
+      "notes": "indirection on int (non-pointer)"
+    },
+    {
+      "filepath": "benchmark/type_errors/te07_bool_to_struct.cpp",
+      "category_dir": "type_errors",
+      "expected_status": "error",
+      "expected_category": "type_error",
+      "expected_security_verdict": "clean",
+      "cwe": null,
+      "notes": "cannot init struct with bool"
+    },
+    {
+      "filepath": "benchmark/type_errors/te08_string_subtract.cpp",
+      "category_dir": "type_errors",
+      "expected_status": "error",
+      "expected_category": "type_error",
+      "expected_security_verdict": "clean",
+      "cwe": null,
+      "notes": "no operator- for string"
+    },
+    {
+      "filepath": "benchmark/warnings_only/wo01_unused_var.cpp",
+      "category_dir": "warnings_only",
+      "expected_status": "success",
+      "expected_category": null,
+      "expected_security_verdict": "clean",
+      "cwe": null,
+      "notes": "unused variable x, compiles with warning only"
+    },
+    {
+      "filepath": "benchmark/warnings_only/wo02_unused_param.cpp",
+      "category_dir": "warnings_only",
+      "expected_status": "success",
+      "expected_category": null,
+      "expected_security_verdict": "clean",
+      "cwe": null,
+      "notes": "unused parameter times"
+    },
+    {
+      "filepath": "benchmark/warnings_only/wo03_sign_compare.cpp",
+      "category_dir": "warnings_only",
+      "expected_status": "success",
+      "expected_category": null,
+      "expected_security_verdict": "clean",
+      "cwe": null,
+      "notes": "signed/unsigned comparison warning (int vs size_t)"
+    },
+    {
+      "filepath": "benchmark/warnings_only/wo04_uninit_var.cpp",
+      "category_dir": "warnings_only",
+      "expected_status": "success",
+      "expected_category": null,
+      "expected_security_verdict": "clean",
+      "cwe": null,
+      "notes": "uninitialized variable total, compiles as warning"
+    },
+    {
+      "filepath": "benchmark/warnings_only/wo05_implicit_conversion.cpp",
+      "category_dir": "warnings_only",
+      "expected_status": "success",
+      "expected_category": null,
+      "expected_security_verdict": "clean",
+      "cwe": null,
+      "notes": "double -> int implicit conversion, warning only, exit code 0"
+    },
+    {
+      "filepath": "benchmark/warnings_only/wo06_missing_return_warning.cpp",
+      "category_dir": "warnings_only",
+      "expected_status": "success",
+      "expected_category": null,
+      "expected_security_verdict": "clean",
+      "cwe": null,
+      "notes": "missing return in non-void function, warning only on clang (exit 0)"
+    }
+  ]
+}

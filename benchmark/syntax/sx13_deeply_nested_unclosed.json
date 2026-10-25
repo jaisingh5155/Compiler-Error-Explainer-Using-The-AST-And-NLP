@@ -1,0 +1,9 @@
+{
+  "expected_status": "error",
+  "expected_category": "syntax_error",
+  "expected_line": 12,
+  "cwe": null,
+  "expected_security_verdict": "clean",
+  "notes": "deeply nested unclosed if brace inside for loop",
+  "expected_output": "deeply nested\n"
+}

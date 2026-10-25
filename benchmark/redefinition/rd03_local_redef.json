@@ -4,5 +4,6 @@
   "expected_line": 5,
   "cwe": null,
   "expected_security_verdict": "clean",
-  "notes": "local variable x redefined in same scope"
+  "notes": "local variable x redefined in same scope",
+  "expected_output": "10\n"
 }

@@ -10,12 +10,14 @@ Outputs:
   - Aggregate summary printed to stdout and saved at the top of the CSV as comments
 """
 import csv
+import datetime
 import hashlib
 import json
 import os
 import re
 import subprocess
 import sys
+import tempfile
 import warnings
 
 warnings.filterwarnings("ignore")
@@ -28,6 +30,7 @@ if SRC not in sys.path:
     sys.path.insert(0, SRC)
 
 BENCHMARK = os.path.join(PROJECT, "benchmark")
+MANIFEST  = os.path.join(BENCHMARK, "manifest.json")
 PYTHON    = os.path.join(PROJECT, ".venv", "bin", "python3")
 MAIN_PY   = os.path.join(SRC, "main.py")
 
@@ -35,6 +38,8 @@ MAIN_PY   = os.path.join(SRC, "main.py")
 def discover():
     pairs = []
     for dirpath, _, filenames in os.walk(BENCHMARK):
+        if "agent_attacks" in dirpath:
+            continue
         for fn in sorted(filenames):
             if not fn.endswith(".cpp"):
                 continue
@@ -50,10 +55,23 @@ def discover():
             pairs.append((rel, cpp_path, category_dir, meta))
     return pairs
 
+# ── Helper to detect compiler version ────────────────────────────
+def get_compiler_version(compiler_binary: str = "clang++") -> str:
+    try:
+        proc = subprocess.run([compiler_binary, "--version"], capture_output=True, text=True)
+        if proc.stdout:
+            return proc.stdout.splitlines()[0].strip()
+    except Exception:
+        pass
+    return "unknown"
+
+
 # ── Run main.py -j on a file ─────────────────────────────────────
-def run_pipeline(cpp_path):
+def run_pipeline(cpp_path, compiler_override: str = None):
     env = os.environ.copy()
     env["PYTHONWARNINGS"] = "ignore"
+    if compiler_override:
+        env["CXX_OVERRIDE"] = compiler_override
     proc = subprocess.run(
         [PYTHON, MAIN_PY, cpp_path, "-j"],
         capture_output=True, text=True, env=env,
@@ -97,84 +115,88 @@ def extract_actual(data):
 
 # ── Run healer on a file (on a temp copy) ────────────────────────
 def run_healer(cpp_path, meta):
-    """Run auto_healer on a copy; returns outcome string."""
-    from auto_healer import attempt_fix
-    from error_classifier import ErrorClassifier
-
-    ERR_PAT = re.compile(r"^(.+?):(\d+):(\d+):\s*(error|warning):\s*(.*)$")
-    MAX_ATTEMPTS = 10
-
-    try:
-        clf = ErrorClassifier()
-    except Exception:
-        return "classifier_error"
+    """Run planner with multi-gate verify pipeline on a copy; returns (outcome, planner_result)."""
+    from planner import run_planner
 
     with open(cpp_path) as f:
         original = f.read()
 
-    import tempfile
-    tmp = tempfile.NamedTemporaryFile(suffix=".cpp", delete=False, mode="w")
+    suffix = os.path.splitext(cpp_path)[1] or ".cpp"
+    tmp = tempfile.NamedTemporaryFile(suffix=suffix, delete=False, mode="w")
     tmp.write(original)
     tmp.close()
     tmp_path = tmp.name
 
     try:
-        source = original
-        for attempt in range(1, MAX_ATTEMPTS + 1):
-            proc = subprocess.run(
-                ["g++", "-std=c++17", "-Wall", tmp_path, "-o", "/dev/null"],
-                capture_output=True, text=True
-            )
-            errors = []
-            for line in proc.stderr.splitlines():
-                m = ERR_PAT.match(line.strip())
-                if m:
-                    errors.append({
-                        "file": m.group(1), "line": int(m.group(2)),
-                        "column": int(m.group(3)), "type": m.group(4),
-                        "message": m.group(5), "raw": line
-                    })
-            if proc.returncode == 0 and not [e for e in errors if e["type"] == "error"]:
-                return "compiled_clean"
-            if not errors:
-                return "no_errors_parsed"
-
-            # Classify
-            for e in errors:
-                cat, conf = clf.predict(e["message"])
-                e["category"] = cat or "other"
-                e["confidence"] = round(conf, 3)
-
-            target = None
-            for e in errors:
-                if e["type"] == "error":
-                    target = e
-                    break
-            if not target:
-                for e in errors:
-                    if e["type"] == "warning":
-                        target = e
-                        break
-            if not target:
-                return "no_fixable_target"
-
-            patched = attempt_fix(source, target)
-            if patched is None or patched == source:
-                return "gave_up"
-            source = patched
-            with open(tmp_path, "w") as f:
-                f.write(patched)
-        return "exhausted"
+        res = run_planner(tmp_path, max_iterations=10, backup=True)
+        if res.clean:
+            outcome = "compiled_clean"
+        elif res.status == "no_fixable_finding":
+            outcome = "gave_up"
+        elif res.status == "max_iterations":
+            outcome = "exhausted"
+        else:
+            outcome = res.status
+        return outcome, res
     except Exception as ex:
-        return f"crashed:{type(ex).__name__}"
+        return f"crashed:{type(ex).__name__}", None
     finally:
-        os.unlink(tmp_path)
+        if os.path.exists(tmp_path):
+            try:
+                os.unlink(tmp_path)
+            except OSError:
+                pass
+        bak = tmp_path + ".bak"
+        if os.path.exists(bak):
+            try:
+                os.unlink(bak)
+            except OSError:
+                pass
 
 
 # ── Main ──────────────────────────────────────────────────────────
 def main():
+    import argparse
+    parser = argparse.ArgumentParser(description="Run the full benchmark suite.")
+    parser.add_argument(
+        "--compiler",
+        default=None,
+        metavar="BINARY",
+        help=(
+            "Override the compiler binary used for every compile step in this run "
+            "(sets CXX_OVERRIDE env var; default: use system g++ as configured). "
+            "Example: --compiler=g++-14"
+        ),
+    )
+    args = parser.parse_args()
+    compiler_override = args.compiler  # None means use default
+
+    # Determine which binary to query for version string
+    if compiler_override:
+        compiler_ver = get_compiler_version(compiler_override)
+    else:
+        compiler_ver = get_compiler_version("clang++")
+
     pairs = discover()
-    print(f"Discovered {len(pairs)} benchmark files")
+    print(f"Discovered {len(pairs)} benchmark files (Compiler: {compiler_ver})")
+    if compiler_override:
+        print(f"  [COMPILER OVERRIDE] Using: {compiler_override} ({compiler_ver})")
+
+    # ── Manifest consistency check ────────────────────────────────
+    if os.path.exists(MANIFEST):
+        with open(MANIFEST) as mf:
+            manifest = json.load(mf)
+        expected_total = manifest["denominators"]["total"]
+        if len(pairs) != expected_total:
+            print(f"\n⚠ MANIFEST MISMATCH: discovered {len(pairs)} files "
+                  f"but manifest.json expects {expected_total}.")
+            print(f"  Update manifest.json or add missing .json metadata files.")
+            print(f"  Continuing with discovered {len(pairs)} files...\n")
+        else:
+            print(f"  ✓ Manifest check: {len(pairs)} files match manifest.json")
+    else:
+        print(f"  ⚠ No manifest.json found — denominators computed ad-hoc")
+        manifest = None
 
     # Check if training_data.json gets modified
     td_path = os.path.join(PROJECT, "data", "training_data.json")
@@ -185,7 +207,7 @@ def main():
     for rel, cpp_path, cat_dir, meta in pairs:
         print(f"  Running: {rel} ...", end=" ", flush=True)
         try:
-            data, rc, stderr = run_pipeline(cpp_path)
+            data, rc, stderr = run_pipeline(cpp_path, compiler_override)
         except subprocess.TimeoutExpired:
             data, rc = None, -1
         actual_status, actual_cat, conf, actual_sec, sec_findings = extract_actual(data)
@@ -199,17 +221,35 @@ def main():
         cat_match = (actual_cat == exp_cat) if exp_cat else None
         sec_match = (actual_sec == exp_sec)
 
-        # Run healer on error files
+        # Run healer on error files only; non-error files are not applicable
         heal_outcome = ""
+        planner_res = None
         if exp_status == "error":
             try:
-                heal_outcome = run_healer(cpp_path, meta)
+                # Pass compiler override into the healer subprocess environment
+                if compiler_override:
+                    os.environ["CXX_OVERRIDE"] = compiler_override
+                elif "CXX_OVERRIDE" in os.environ:
+                    del os.environ["CXX_OVERRIDE"]
+                heal_outcome, planner_res = run_healer(cpp_path, meta)
             except Exception as ex:
                 heal_outcome = f"crashed:{type(ex).__name__}"
+        else:
+            heal_outcome = "not_applicable"
+            planner_res = None
+
+        gate_failures = ""
+        if planner_res and getattr(planner_res, "trace_log", None):
+            failures = []
+            for e in planner_res.trace_log:
+                if e.get("tool_called") == "verify" and e.get("failing_gate"):
+                    failures.append(f"{e['failing_gate']}: {e.get('output_summary', '')}")
+            gate_failures = "; ".join(failures)
 
         row = {
             "filepath": rel,
             "category_dir": cat_dir,
+            "compiler_version": compiler_ver,
             "cwe": cwe or "",
             "expected_status": exp_status,
             "actual_status": actual_status,
@@ -222,6 +262,7 @@ def main():
             "actual_security_verdict": actual_sec,
             "security_match": sec_match,
             "heal_outcome": heal_outcome,
+            "gate_failures": gate_failures,
             "notes": meta.get("notes", ""),
         }
         rows.append(row)
@@ -233,6 +274,8 @@ def main():
             cat_sym = f" cat:✗({actual_cat})"
         sec_sym = "" if sec_match else f" sec:✗({actual_sec})"
         heal_sym = f" heal:{heal_outcome}" if heal_outcome else ""
+        if gate_failures:
+            heal_sym += f" [{gate_failures[:40]}...]"
         print(f"{status_sym}{cat_sym}{sec_sym}{heal_sym}")
 
     # ── Compute aggregates ────────────────────────────────────────
@@ -270,8 +313,8 @@ def main():
     fp_count = sum(1 for r in clean_decoy if r["actual_security_verdict"] != "clean")
     fp_rate = fp_count / len(clean_decoy) if clean_decoy else 0
 
-    # Healer stats
-    heal_rows = [r for r in rows if r["heal_outcome"]]
+    # Healer stats (evaluated strictly on eligible error files)
+    heal_rows = [r for r in rows if r["heal_outcome"] and r["heal_outcome"] != "not_applicable"]
     heal_success = sum(1 for r in heal_rows if r["heal_outcome"] == "compiled_clean")
     heal_gave_up = sum(1 for r in heal_rows if r["heal_outcome"] == "gave_up")
     heal_crashed = sum(1 for r in heal_rows if "crashed" in r["heal_outcome"])
@@ -282,10 +325,18 @@ def main():
     td_modified = td_hash_before != td_hash_after
 
     # ── Print summary ─────────────────────────────────────────────
+    today = datetime.date.today().isoformat()
     summary_lines = [
         "# BENCHMARK RESULTS — AGGREGATE SUMMARY",
-        f"# Date: 2026-09-25",
+        f"# Date: {today}",
+        f"# Compiler Version: {compiler_ver}",
         f"# Total benchmark files: {total}",
+        f"#",
+        f"# CANONICAL DENOMINATORS (from manifest/metadata):",
+        f"#   Total files (Status denominator):         {total}",
+        f"#   Classification denominator:               {len(cat_rows)} (files with expected_category)",
+        f"#   Security denominator (vulnerable/clean):  {sec_tp + sec_fn} vulnerable / {len(clean_decoy)} clean/decoy",
+        f"#   Auto-Healer denominator:                  {len(heal_rows)} (error files eligible for healing)",
         f"#",
         f"# STATUS ACCURACY: {status_correct}/{total} ({100*status_correct/total:.1f}%)",
         f"# CLASSIFICATION ACCURACY: {cat_correct}/{len(cat_rows)} ({100*cat_correct/len(cat_rows):.1f}%)" if cat_rows else "# CLASSIFICATION ACCURACY: N/A",
@@ -326,22 +377,34 @@ def main():
 
     # ── Write CSV ─────────────────────────────────────────────────
     csv_path = os.path.join(BENCHMARK, "BENCHMARK_RESULTS.csv")
-    with open(csv_path, "w", newline="") as f:
-        for line in summary_lines:
-            f.write(line + "\n")
-        writer = csv.DictWriter(f, fieldnames=[
-            "filepath", "category_dir", "cwe",
-            "expected_status", "actual_status", "status_match",
-            "expected_category", "actual_category", "category_match",
-            "confidence",
-            "expected_security_verdict", "actual_security_verdict", "security_match",
-            "heal_outcome", "notes"
-        ])
-        writer.writeheader()
-        for row in rows:
-            writer.writerow(row)
+    if compiler_override:
+        # Save GCC run to a separate file to avoid overwriting the canonical Clang results
+        safe_name = compiler_override.replace("/", "_").replace(" ", "_")
+        csv_gcc_path = os.path.join(BENCHMARK, f"BENCHMARK_RESULTS_GCC_{safe_name}.csv")
+        out_paths = [csv_gcc_path]
+        print(f"\n[Override] Results written to {csv_gcc_path} (canonical CSV untouched)")
+    else:
+        csv_week8_path = os.path.join(BENCHMARK, "BENCHMARK_RESULTS_WEEK8.csv")
+        out_paths = [csv_path, csv_week8_path]
+    fieldnames = [
+        "filepath", "category_dir", "compiler_version", "cwe",
+        "expected_status", "actual_status", "status_match",
+        "expected_category", "actual_category", "category_match",
+        "confidence",
+        "expected_security_verdict", "actual_security_verdict", "security_match",
+        "heal_outcome", "gate_failures", "notes"
+    ]
+    for out_p in out_paths:
+        with open(out_p, "w", newline="") as f:
+            for line in summary_lines:
+                f.write(line + "\n")
+            writer = csv.DictWriter(f, fieldnames=fieldnames)
+            writer.writeheader()
+            for row in rows:
+                writer.writerow(row)
 
-    print(f"\nResults written to {csv_path}")
+    if not compiler_override:
+        print(f"\nResults written to {csv_path} and {os.path.join(BENCHMARK, 'BENCHMARK_RESULTS_WEEK8.csv')}")
     return rows, summary_lines
 
 if __name__ == "__main__":

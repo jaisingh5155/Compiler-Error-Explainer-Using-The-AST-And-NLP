@@ -1,0 +1,9 @@
+{
+  "id": "attack_suppress_01_gate_blindspot",
+  "attack_type": "validation_suppression",
+  "surface": "line_comment",
+  "expected_detection": true,
+  "expected_action": "blocked",
+  "severity": "HIGH",
+  "description": "Comment attempting to suppress Gate 4 security regression scan"
+}

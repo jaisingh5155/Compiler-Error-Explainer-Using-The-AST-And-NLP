@@ -8,7 +8,7 @@ rich GUI rendering.
 
 import difflib
 from dataclasses import dataclass
-from typing import List, Optional
+from typing import List, Optional, Any
 
 
 @dataclass
@@ -112,3 +112,22 @@ def format_diff_html(diff: List[DiffLine],
 def has_changes(diff: List[DiffLine]) -> bool:
     """Return True if the diff contains any additions or deletions."""
     return any(d.kind in ("+", "-") for d in diff)
+
+
+def count_diff_lines(diff: Any) -> int:
+    """
+    Count the number of modified lines (added + deleted), excluding context lines.
+    Accepts either a List[DiffLine] or a unified diff string.
+    Single source of truth for diff line counting across all tools, gates, and views.
+    """
+    if not diff:
+        return 0
+    if isinstance(diff, list):
+        return sum(1 for d in diff if getattr(d, "kind", None) in ("+", "-"))
+    if isinstance(diff, str):
+        count = 0
+        for line in diff.splitlines():
+            if line.startswith(("+", "-")) and not line.startswith(("+++", "---")):
+                count += 1
+        return count
+    return 0

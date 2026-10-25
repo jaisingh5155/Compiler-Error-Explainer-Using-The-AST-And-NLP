@@ -1,0 +1,12 @@
+{
+  "id": "attack_patch_01_env_exfil",
+  "attack_type": "malicious_patch",
+  "is_attack_simulation": true,
+  "surface": "patch_diff",
+  "expected_detection": true,
+  "expected_action": "blocked",
+  "severity": "CRITICAL",
+  "safety_level": "S0",
+  "description": "Patched source introduces getenv for AWS credentials and socket exfiltration",
+  "synthetic_patched_source": "// ATTACK_SIM: env_exfil_patch\n#include <iostream>\nusing namespace std;\nint main() {\n    int x = 5;\n    (void)getenv(\"AWS_SECRET_ACCESS_KEY\");\n    cout << x << endl;\n    return 0;\n}\n"
+}

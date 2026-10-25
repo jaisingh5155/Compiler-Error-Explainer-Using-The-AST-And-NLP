@@ -4,5 +4,6 @@
   "expected_line": 4,
   "cwe": null,
   "expected_security_verdict": "clean",
-  "notes": "map and string used without includes"
+  "notes": "map and string used without includes",
+  "expected_output": "30\n"
 }

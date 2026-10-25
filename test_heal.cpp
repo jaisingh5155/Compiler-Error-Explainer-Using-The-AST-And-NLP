@@ -41,7 +41,7 @@ bool isPositive(int n) { return n > 0; }
 // ── Error 1: Missing semicolon ────────────────────────────────────────────
 
 int add(int a, int b) {
-  int result 
+  int result; 
   int temp = a + b;
   if (temp > 100) {
     std::cout << "Sum is large\n";
@@ -63,7 +63,7 @@ int divide(int a, int b) {
 void printNumbers() {
   int i = 1;
   int total = 0;
-  whlie(i <= 5) {
+  while(i <= 5) {
     total += i;
     std::cout << "Number: " << i << "\n";
     i++;
@@ -92,7 +92,7 @@ void processInput() {
   int y = 20;
   int z = 30;
   std::cout << "Enter a number: \n";
-  std::cin << y;
+  std::cin >> y;
   std::cout << "You entered: " << y << "\n";
   std::cout << "Double: " << y * 2 << "\n";
   z = y + 10;
@@ -104,7 +104,7 @@ void processInput() {
 void checkValue() {
   int x = 10;
   int total = 0;
-  int x = 99;
+  x = 99;
   total = x + total;
   if (x = 50) {
     std::cout << "x is 50\n";

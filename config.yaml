@@ -1,0 +1,94 @@
+# config.yaml
+# ────────────
+# Centralised configuration for the Compiler Error Explainer pipeline.
+# Moves hardcoded security blocklists and tuning knobs out of source code.
+
+pipeline:
+  max_heal_attempts: 10
+  context_lines: 2
+  log_training: false
+  backup_before_repair: true
+
+compiler:
+  command: "g++"
+  standard: "c++17"
+  extra_flags: []
+
+security:
+  # Functions considered dangerous by the static scanner
+  dangerous_functions:
+    - gets
+    - strcpy
+    - strcat
+    - sprintf
+    - scanf
+    - system
+    - rand
+    - memcpy
+    - memmove
+    - assert
+    - malloc
+
+  # Keywords near which rand() triggers a "Weak Randomness" finding
+  sensitive_keywords:
+    - key
+    - token
+    - password
+    - secret
+
+  # Patterns blocked by the input sanitizer (compiler_runner.py)
+  blocked_patterns:
+    system_calls:
+      - '\bsystem\s*\('
+      - '\bexec\s*\('
+      - '\bpopen\s*\('
+      - '\bfork\s*\('
+    assembly:
+      - '\b__asm__\b'
+      - '\bshellcode\b'
+    sys_includes:
+      - '#include\s*[<"]\s*sys/'
+
+  # Integer overflow sentinel values to track across lines
+  overflow_sentinels:
+    - INT_MAX
+    - SIZE_MAX
+    - UINT_MAX
+    - LONG_MAX
+    - LLONG_MAX
+
+  # Size-related keywords that trigger overflow checks on the same line
+  size_keywords:
+    - alloc
+    - size
+    - len
+    - count
+    - capacity
+
+classifier:
+  model_path: "models/error_classifier.pkl"
+  # Categories the auto-healer will not attempt to fix
+  unfixable_categories:
+    - linker_error
+    - security_violation
+
+llm_explainer:
+  enabled: false              # OFF by default - existing behavior unchanged
+  provider: "gemini"
+  model: "gemini-3.1-flash-lite"
+  api_key_env_var: "GEMINI_API_KEY"
+  timeout_seconds: 12.0
+  max_output_tokens: 150
+
+telemetry:
+  grid_region: "India (approx. national average)"
+  # Grid carbon intensity constant in grams CO2 per kilowatt-hour (gCO2/kWh).
+  grid_carbon_intensity_g_per_kwh: 700.0
+  # Source note for grid intensity
+  grid_source: "approximate; verify against CEA/Ember before citing"
+  # Assumed active compute package TDP in Watts (CPU + RAM) on Apple Silicon / macOS for energy estimation.
+  # Source: Apple M-series nominal thermal design power under active single-core compile/execute load (~15.0 W).
+  assumed_package_tdp_watts: 15.0
+
+
+

@@ -11,6 +11,43 @@ from models import CompilerError
 Severity = Literal["Critical", "High", "Medium", "Low"]
 
 
+VULNERABILITY_CWE_MAP: dict[str, str] = {
+    # High-impact Memory / Injection vulnerabilities (Benchmark ground truth)
+    "Buffer Overflow": "CWE-120",
+    "Unsafe String Function": "CWE-120",
+    "Unbounded Input": "CWE-120",
+    "Unsafe Memory Copy": "CWE-119",
+    "Command Injection": "CWE-78",
+    "Format String Vulnerability": "CWE-134",
+    "Integer Overflow": "CWE-190",
+    "Logic Error / Integer Overflow Risk": "CWE-190",
+    "Double Free": "CWE-415",
+    "Use After Free": "CWE-416",
+    "Null Pointer Dereference": "CWE-476",
+    "Uninitialized Memory": "CWE-457",
+    "Potential Memory Leak": "CWE-401",
+    "Divide By Zero": "CWE-369",
+    "Division By Zero": "CWE-369",
+
+    # Secondary static security / hardening checks
+    "Weak Randomness": "CWE-338",
+    "Disabled Safety Check": "CWE-670",
+    "Unresolved Security Debt": "CWE-546",
+    "Unsafe Pointer Arithmetic": "CWE-469",
+    "Unused Variable / Dead Code": "CWE-563",
+    "Unchecked Return Value": "CWE-252",
+    "Use of Deprecated API": "CWE-477",
+    "Signed/Unsigned Mismatch": "CWE-195",
+}
+
+
+def get_cwe_for_vulnerability(vuln_type: str | None) -> str:
+    """Return the canonical CWE ID for a vulnerability type string, or 'CWE-Other' if unknown."""
+    if not vuln_type:
+        return "CWE-Other"
+    return VULNERABILITY_CWE_MAP.get(vuln_type.strip(), "CWE-Other")
+
+
 @dataclass(frozen=True)
 class SecurityFinding:
     file: str
@@ -21,9 +58,13 @@ class SecurityFinding:
     description: str
     recommendation: str
     source: Literal["compiler_diagnostic", "static_scan"]
+    cwe: str | None = None
 
     def to_dict(self):
-        return asdict(self)
+        d = asdict(self)
+        if not d.get("cwe"):
+            d["cwe"] = get_cwe_for_vulnerability(self.vulnerability_type)
+        return d
 
 
 _SEVERITY_ORDER: dict[Severity, int] = {
@@ -84,6 +125,13 @@ _DIAGNOSTIC_RULES = [
         "Check bounds before arithmetic and use checked multiplication/addition for allocation sizes.",
     ),
     (
+        re.compile(r"division by zero|divide by zero|remainder by zero", re.IGNORECASE),
+        "High",
+        "Divide By Zero",
+        "Integer division or modulo by zero leads to undefined behavior or runtime crash.",
+        "Ensure the divisor cannot evaluate to zero before performing division or modulo.",
+    ),
+    (
         re.compile(r"deprecated", re.IGNORECASE),
         "Low",
         "Use of Deprecated API",
@@ -123,7 +171,17 @@ _DELETE_RE = re.compile(r"\bdelete\s*(?:\[\])?\s*([A-Za-z_]\w*)\s*;")
 _RAW_POINTER_USE_RE = re.compile(r"(?:\*|->|\[)\s*([A-Za-z_]\w*)|([A-Za-z_]\w*)\s*(?:->|\[)")
 
 
-def _empty_finding(file: str, severity: Severity, vulnerability_type: str, description: str, recommendation: str, line: int | None = None, column: int | None = None, source: str = "static_scan") -> SecurityFinding:
+def _empty_finding(
+    file: str,
+    severity: Severity,
+    vulnerability_type: str,
+    description: str,
+    recommendation: str,
+    line: int | None = None,
+    column: int | None = None,
+    source: str = "static_scan",
+    cwe: str | None = None,
+) -> SecurityFinding:
     return SecurityFinding(
         file=file,
         line=line,
@@ -133,6 +191,7 @@ def _empty_finding(file: str, severity: Severity, vulnerability_type: str, descr
         description=description,
         recommendation=recommendation,
         source=source,  # type: ignore[arg-type]
+        cwe=cwe or get_cwe_for_vulnerability(vulnerability_type),
     )
 
 
@@ -143,7 +202,17 @@ def _normalize_path(source_path: str) -> str:
         return source_path
 
 
-def _make_finding(source_path: str, line: int | None, column: int | None, severity: Severity, vulnerability_type: str, description: str, recommendation: str, source: Literal["compiler_diagnostic", "static_scan"]) -> SecurityFinding:
+def _make_finding(
+    source_path: str,
+    line: int | None,
+    column: int | None,
+    severity: Severity,
+    vulnerability_type: str,
+    description: str,
+    recommendation: str,
+    source: Literal["compiler_diagnostic", "static_scan"],
+    cwe: str | None = None,
+) -> SecurityFinding:
     return SecurityFinding(
         file=_normalize_path(source_path),
         line=line,
@@ -153,67 +222,24 @@ def _make_finding(source_path: str, line: int | None, column: int | None, severi
         description=description,
         recommendation=recommendation,
         source=source,
+        cwe=cwe or get_cwe_for_vulnerability(vulnerability_type),
     )
 
 
+from lexer import strip_code as _dfa_strip_code
+try:
+    from ast_parser import parse_clang_ast, ASTNode
+except ImportError:
+    try:
+        from src.ast_parser import parse_clang_ast, ASTNode
+    except ImportError:
+        parse_clang_ast = None
+        ASTNode = None
+
+
 def _strip_code(line: str, state: dict[str, object]) -> str:
-    in_block_comment = bool(state.get("in_block_comment"))
-    raw_delim = state.get("raw_delim")
-    out: list[str] = []
-    i = 0
-
-    while i < len(line):
-        if raw_delim is not None:
-            raw_end = line.find(")" + str(raw_delim) + '"', i)
-            if raw_end == -1:
-                state["raw_delim"] = raw_delim
-                return "".join(out)
-            i = raw_end + len(str(raw_delim)) + 2
-            raw_delim = None
-            continue
-
-        if in_block_comment:
-            comment_end = line.find("*/", i)
-            if comment_end == -1:
-                state["in_block_comment"] = True
-                return "".join(out)
-            i = comment_end + 2
-            in_block_comment = False
-            continue
-
-        if line.startswith("//", i):
-            break
-        if line.startswith("/*", i):
-            in_block_comment = True
-            i += 2
-            continue
-
-        raw_match = _RAW_STRING_START.match(line, i)
-        if raw_match:
-            raw_delim = raw_match.group(1)
-            i = raw_match.end()
-            continue
-
-        ch = line[i]
-        if ch in ("'", '"'):
-            quote = ch
-            i += 1
-            while i < len(line):
-                if line[i] == "\\":
-                    i += 2
-                    continue
-                if line[i] == quote:
-                    i += 1
-                    break
-                i += 1
-            continue
-
-        out.append(ch)
-        i += 1
-
-    state["in_block_comment"] = in_block_comment
-    state["raw_delim"] = raw_delim
-    return "".join(out)
+    """Strip comments and string contents using formal DFA lexer."""
+    return _dfa_strip_code(line, state)
 
 
 def _split_args(argument_blob: str) -> list[str]:
@@ -296,6 +322,681 @@ def _looks_like_raw_integer_size(size_expr: str) -> bool:
     return False
 
 
+# ── AST-Based Structured Security Detectors (Week 7) ──────────────────────────
+
+def _get_decl_ref_name(node: Optional[ASTNode]) -> Optional[str]:
+    if not node:
+        return None
+    if node.kind == "DeclRefExpr" and node.name:
+        return node.name
+    for c in node.children:
+        res = _get_decl_ref_name(c)
+        if res:
+            return res
+    return None
+
+
+def _is_null_pointer_expr(expr_node: ASTNode) -> bool:
+    """Check if expression evaluates to nullptr/NULL/0 or a pointer-returning call."""
+    if expr_node.kind in ("CXXNullPtrLiteralExpr", "GNUNullExpr"):
+        return True
+    if expr_node.kind == "IntegerLiteral" and expr_node.raw.get("value") == 0:
+        return True
+    if expr_node.kind == "CallExpr":
+        # Functions returning pointers without non-null guarantee (malloc, findValue, etc.)
+        return True
+    for c in expr_node.children:
+        if _is_null_pointer_expr(c):
+            return True
+    return False
+
+
+def _is_valid_address_expr(expr_node: ASTNode) -> bool:
+    """Check if expression produces a valid address (e.g. &x, new T, string literal)."""
+    if expr_node.kind == "CXXNewExpr":
+        return True
+    if expr_node.kind == "UnaryOperator" and expr_node.raw.get("opcode") == "&":
+        return True
+    if expr_node.kind == "StringLiteral":
+        return True
+    return any(_is_valid_address_expr(c) for c in expr_node.children)
+
+
+def _terminates_control_flow(stmt_node: ASTNode) -> bool:
+    """Return True if statement returns, throws, or exits."""
+    if stmt_node.kind in ("ReturnStmt", "CXXThrowExpr"):
+        return True
+    if stmt_node.kind == "CallExpr":
+        name = _get_decl_ref_name(stmt_node)
+        if name in ("exit", "_exit", "abort", "__builtin_trap"):
+            return True
+    for c in stmt_node.children:
+        if _terminates_control_flow(c):
+            return True
+    return False
+
+
+def _extract_null_check_target(cond_node: ASTNode) -> tuple[Optional[str], bool]:
+    """
+    Analyze condition for null check on a pointer.
+    Returns (pointer_name, is_positive_check)
+    is_positive_check: True if condition is True when pointer is NON-NULL (e.g. p != nullptr, p)
+                       False if condition is True when pointer is NULL (e.g. p == nullptr, !p)
+    """
+    if cond_node.kind == "BinaryOperator":
+        op = cond_node.raw.get("opcode")
+        if op in ("!=", "==") and len(cond_node.children) >= 2:
+            c0, c1 = cond_node.children[0], cond_node.children[1]
+            p_name = _get_decl_ref_name(c0)
+            if p_name and _is_null_pointer_expr(c1):
+                return (p_name, op == "!=")
+            p_name = _get_decl_ref_name(c1)
+            if p_name and _is_null_pointer_expr(c0):
+                return (p_name, op == "!=")
+    if cond_node.kind == "UnaryOperator" and cond_node.raw.get("opcode") == "!":
+        if cond_node.children:
+            p_name = _get_decl_ref_name(cond_node.children[0])
+            if p_name:
+                return (p_name, False)
+    p_name = _get_decl_ref_name(cond_node)
+    if p_name:
+        return (p_name, True)
+    return (None, False)
+
+
+def _extract_assert_guard_target(stmt_node: ASTNode, ptr_state: dict[str, str]) -> Optional[str]:
+    """Check if statement is an assertion that validates a pointer non-null."""
+    has_assert_call = False
+    literals: list[str] = []
+
+    def _traverse(node: ASTNode):
+        nonlocal has_assert_call
+        if node.kind == "CallExpr":
+            callee = _get_decl_ref_name(node)
+            if callee in ("__assert_rtn", "__assert_fail", "_assert", "_wassert", "abort", "__builtin_trap"):
+                has_assert_call = True
+        if node.kind == "StringLiteral" and node.raw.get("value"):
+            literals.append(str(node.raw.get("value")))
+        for c in node.children:
+            _traverse(c)
+
+    _traverse(stmt_node)
+    if has_assert_call:
+        for lit in literals:
+            val = lit.strip('"').strip()
+            m = re.match(r"^([a-zA-Z_]\w*)\s*!=\s*(?:nullptr|NULL|0)$", val)
+            if m and m.group(1) in ptr_state:
+                return m.group(1)
+            m = re.match(r"^(?:nullptr|NULL|0)\s*!=\s*([a-zA-Z_]\w*)$", val)
+            if m and m.group(1) in ptr_state:
+                return m.group(1)
+            if val in ptr_state:
+                return val
+    return None
+
+
+def _scan_null_pointer_dereference(ast_nodes: list[ASTNode], source_path: str) -> list[SecurityFinding]:
+    """CWE-476: Linear AST scan detecting pointer dereferences without prior null check."""
+    findings: list[SecurityFinding] = []
+
+    source_lines: list[str] = []
+    try:
+        with open(source_path) as f:
+            source_lines = f.readlines()
+    except Exception:
+        pass
+
+    for func in ast_nodes:
+        if func.kind not in ("FunctionDecl", "CXXMethodDecl", "CXXConstructorDecl"):
+            continue
+        body = next((c for c in func.children if c.kind == "CompoundStmt"), None)
+        if not body:
+            continue
+
+        ptr_state: dict[str, str] = {}  # ptr_name -> "NULL_OR_UNCHECKED" | "VALID"
+        ptr_origin_line: dict[str, int] = {}
+        reported_ptrs: set[str] = set()
+
+        def _find_dereferences(node: ASTNode, current_ptrs: dict[str, str], guarded_ptrs: set[str]):
+            # 1. UnaryOperator *
+            if node.kind == "UnaryOperator" and node.raw.get("opcode") == "*":
+                if node.children:
+                    p_name = _get_decl_ref_name(node.children[0])
+                    if p_name and p_name in current_ptrs and current_ptrs[p_name] == "NULL_OR_UNCHECKED":
+                        if p_name not in guarded_ptrs and p_name not in reported_ptrs:
+                            findings.append(_make_finding(
+                                source_path,
+                                node.begin_line,
+                                node.begin_col,
+                                "High",
+                                "Null Pointer Dereference",
+                                f"Pointer '{p_name}' is dereferenced (*{p_name}) without prior null check after being set to null/uninitialized (line {ptr_origin_line.get(p_name, node.begin_line)}).",
+                                f"Verify that '{p_name}' is not null (e.g. 'if ({p_name} != nullptr)') before dereferencing.",
+                                "static_scan"
+                            ))
+                            reported_ptrs.add(p_name)
+                            return
+            # 2. MemberExpr with isArrow == True (ptr->member)
+            if node.kind == "MemberExpr" and node.raw.get("isArrow") is True:
+                if node.children:
+                    p_name = _get_decl_ref_name(node.children[0])
+                    if p_name and p_name in current_ptrs and current_ptrs[p_name] == "NULL_OR_UNCHECKED":
+                        if p_name not in guarded_ptrs and p_name not in reported_ptrs:
+                            findings.append(_make_finding(
+                                source_path,
+                                node.begin_line,
+                                node.begin_col,
+                                "High",
+                                "Null Pointer Dereference",
+                                f"Pointer '{p_name}' is dereferenced via member access ('{p_name}->{node.name}') without prior null check (line {ptr_origin_line.get(p_name, node.begin_line)}).",
+                                f"Verify that '{p_name}' is not null before accessing its members.",
+                                "static_scan"
+                            ))
+                            reported_ptrs.add(p_name)
+                            return
+            # 3. ArraySubscriptExpr (ptr[i])
+            if node.kind == "ArraySubscriptExpr":
+                if node.children:
+                    p_name = _get_decl_ref_name(node.children[0])
+                    if p_name and p_name in current_ptrs and current_ptrs[p_name] == "NULL_OR_UNCHECKED":
+                        if p_name not in guarded_ptrs and p_name not in reported_ptrs:
+                            findings.append(_make_finding(
+                                source_path,
+                                node.begin_line,
+                                node.begin_col,
+                                "High",
+                                "Null Pointer Dereference",
+                                f"Pointer '{p_name}' is indexed as an array ('{p_name}[...]') without prior null check (line {ptr_origin_line.get(p_name, node.begin_line)}).",
+                                f"Verify that '{p_name}' is not null before indexing.",
+                                "static_scan"
+                            ))
+                            reported_ptrs.add(p_name)
+                            return
+
+            for c in node.children:
+                _find_dereferences(c, current_ptrs, guarded_ptrs)
+
+        for stmt in body.children:
+            # Loops are out-of-scope for linear AST pointer tracking
+            if stmt.kind in ("ForStmt", "WhileStmt", "DoStmt", "CXXForRangeStmt"):
+                continue
+
+            # Pointer declaration
+            if stmt.kind == "DeclStmt":
+                for var_node in stmt.children:
+                    if var_node.kind == "VarDecl" and var_node.name:
+                        tname = var_node.type_name or ""
+                        if "*" in tname:
+                            if not var_node.children:
+                                ptr_state[var_node.name] = "NULL_OR_UNCHECKED"
+                                ptr_origin_line[var_node.name] = var_node.begin_line
+                            elif any(_is_null_pointer_expr(c) for c in var_node.children):
+                                ptr_state[var_node.name] = "NULL_OR_UNCHECKED"
+                                ptr_origin_line[var_node.name] = var_node.begin_line
+                            elif any(_is_valid_address_expr(c) for c in var_node.children):
+                                ptr_state[var_node.name] = "VALID"
+                continue
+
+            # Pointer assignment (p = ...)
+            if stmt.kind == "BinaryOperator" and stmt.raw.get("opcode") == "=":
+                if len(stmt.children) >= 2:
+                    p_name = _get_decl_ref_name(stmt.children[0])
+                    if p_name and p_name in ptr_state:
+                        if _is_valid_address_expr(stmt.children[1]):
+                            ptr_state[p_name] = "VALID"
+                        elif _is_null_pointer_expr(stmt.children[1]):
+                            ptr_state[p_name] = "NULL_OR_UNCHECKED"
+                            ptr_origin_line[p_name] = stmt.begin_line
+
+            # Assert statement checking null
+            assert_p = _extract_assert_guard_target(stmt, ptr_state)
+            if not assert_p and source_lines:
+                exp_loc = stmt.raw.get("range", {}).get("begin", {}).get("expansionLoc", {})
+                line_no = exp_loc.get("line") or getattr(stmt, "begin_line", None)
+                if line_no and 1 <= line_no <= len(source_lines):
+                    sline = source_lines[line_no - 1]
+                    m = re.search(r'\bassert\s*\(\s*(?:([a-zA-Z_]\w*)\s*!=\s*(?:nullptr|NULL|0)|(?:nullptr|NULL|0)\s*!=\s*([a-zA-Z_]\w*)|([a-zA-Z_]\w*))\s*\)', sline)
+                    if m:
+                        matched = m.group(1) or m.group(2) or m.group(3)
+                        if matched in ptr_state:
+                            assert_p = matched
+            if assert_p and assert_p in ptr_state:
+                ptr_state[assert_p] = "VALID"
+                continue
+
+            # If statement checking null
+            if stmt.kind == "IfStmt":
+                cond = stmt.children[0] if len(stmt.children) >= 1 else None
+                then_branch = stmt.children[1] if len(stmt.children) >= 2 else None
+                else_branch = stmt.children[2] if len(stmt.children) >= 3 else None
+
+                if cond:
+                    p_name, is_positive = _extract_null_check_target(cond)
+                    if p_name and p_name in ptr_state:
+                        if is_positive:
+                            if then_branch:
+                                _find_dereferences(then_branch, ptr_state, guarded_ptrs={p_name})
+                            if else_branch:
+                                _find_dereferences(else_branch, ptr_state, guarded_ptrs=set())
+                            continue
+                        else:
+                            if then_branch:
+                                if _terminates_control_flow(then_branch):
+                                    ptr_state[p_name] = "VALID"
+                                _find_dereferences(then_branch, ptr_state, guarded_ptrs=set())
+                            if else_branch:
+                                _find_dereferences(else_branch, ptr_state, guarded_ptrs={p_name})
+                            continue
+
+            _find_dereferences(stmt, ptr_state, guarded_ptrs=set())
+
+    return findings
+
+
+def _is_primitive_type(tname: Optional[str]) -> bool:
+    if not tname:
+        return True
+    if any(cls in tname for cls in ("string", "vector", "map", "set", "deque", "list", "unique_ptr", "shared_ptr", "ifstream", "ofstream", "stringstream")):
+        return False
+    return True
+
+
+def _is_operator_rshift(node: ASTNode) -> bool:
+    if node.kind != "CXXOperatorCallExpr":
+        return False
+    if node.children:
+        first = node.children[0]
+        if first.name == "operator>>":
+            return True
+        for gc in first.children:
+            if gc.name == "operator>>":
+                return True
+    return False
+
+
+def _collect_stream_extracted_vars(node: ASTNode) -> set[str]:
+    extracted = set()
+    if _is_operator_rshift(node) and len(node.children) >= 3:
+        rhs = node.children[2]
+        v = _get_decl_ref_name(rhs)
+        if v:
+            extracted.add(v)
+        extracted.update(_collect_stream_extracted_vars(node.children[1]))
+    return extracted
+
+
+def _is_scanf_call(node: ASTNode) -> bool:
+    if node.kind != "CallExpr" or not node.children:
+        return False
+    callee = _get_decl_ref_name(node.children[0])
+    return callee in ("scanf", "fscanf", "sscanf", "std::scanf", "std::fscanf", "std::sscanf")
+
+
+def _collect_scanf_vars(node: ASTNode) -> set[str]:
+    extracted = set()
+    if _is_scanf_call(node):
+        for arg in node.children[1:]:
+            if arg.kind == "UnaryOperator" and arg.raw.get("opcode") == "&":
+                v = _get_decl_ref_name(arg)
+                if v:
+                    extracted.add(v)
+            else:
+                for c in arg.children:
+                    if c.kind == "UnaryOperator" and c.raw.get("opcode") == "&":
+                        v = _get_decl_ref_name(c)
+                        if v:
+                            extracted.add(v)
+    return extracted
+
+
+def _is_getline_call(node: ASTNode) -> bool:
+    if node.kind != "CallExpr" or not node.children:
+        return False
+    callee = _get_decl_ref_name(node.children[0])
+    return callee in ("getline", "std::getline")
+
+
+def _collect_getline_vars(node: ASTNode) -> set[str]:
+    extracted = set()
+    if _is_getline_call(node) and len(node.children) >= 3:
+        v = _get_decl_ref_name(node.children[2])
+        if v:
+            extracted.add(v)
+    return extracted
+
+
+def _scan_uninitialized_variable_use(ast_nodes: list[ASTNode], source_path: str) -> list[SecurityFinding]:
+    """CWE-457: Linear AST scan tracking local variables read before being written."""
+    findings: list[SecurityFinding] = []
+
+    try:
+        source_lines = Path(source_path).read_text(encoding="utf-8", errors="ignore").splitlines()
+    except Exception:
+        source_lines = []
+
+    for func in ast_nodes:
+        if func.kind not in ("FunctionDecl", "CXXMethodDecl", "CXXConstructorDecl"):
+            continue
+        body = next((c for c in func.children if c.kind == "CompoundStmt"), None)
+        if not body:
+            continue
+
+        var_state: dict[str, str] = {}  # var_name -> "UNINITIALIZED" | "INITIALIZED"
+        var_decl_line: dict[str, int] = {}
+        reported_vars: set[str] = set()
+
+        def _collect_writes(node: ASTNode) -> set[str]:
+            """Return set of variables written/assigned in this subtree."""
+            written = set()
+            if node.kind in ("BinaryOperator", "CompoundAssignOperator") and node.raw.get("opcode") in ("=", "+=", "-=", "*=", "/="):
+                if node.children:
+                    v = _get_decl_ref_name(node.children[0])
+                    if v:
+                        written.add(v)
+            if node.kind == "UnaryOperator" and node.raw.get("opcode") in ("&", "++", "--"):
+                if node.children:
+                    v = _get_decl_ref_name(node.children[0])
+                    if v:
+                        written.add(v)
+            if node.kind == "CXXOperatorCallExpr":
+                if _is_operator_rshift(node):
+                    written.update(_collect_stream_extracted_vars(node))
+                else:
+                    for c in node.children:
+                        if c.kind == "DeclRefExpr" and c.name in var_state:
+                            written.add(c.name)
+            if node.kind == "CallExpr":
+                written.update(_collect_scanf_vars(node))
+                written.update(_collect_getline_vars(node))
+            if node.kind == "RecoveryExpr":
+                names = [c.name for c in node.children if c.kind == "DeclRefExpr"]
+                if "cin" in names:
+                    for n in names:
+                        if n != "cin" and n in var_state:
+                            written.add(n)
+            for c in node.children:
+                if not (_is_operator_rshift(node) or (node.kind == "CallExpr" and (_is_scanf_call(node) or _is_getline_call(node)))):
+                    written.update(_collect_writes(c))
+            return written
+
+        def _check_reads(node: ASTNode, in_lhs_of_assign: bool = False, in_address_of: bool = False):
+            if node.kind in ("BinaryOperator", "CompoundAssignOperator") and node.raw.get("opcode") in ("=", "+=", "-=", "*=", "/="):
+                if len(node.children) >= 2:
+                    _check_reads(node.children[0], in_lhs_of_assign=True, in_address_of=False)
+                    _check_reads(node.children[1], in_lhs_of_assign=False, in_address_of=False)
+                return
+
+            if node.kind == "UnaryOperator" and node.raw.get("opcode") == "&":
+                for c in node.children:
+                    _check_reads(c, in_lhs_of_assign=False, in_address_of=True)
+                return
+
+            # operator>>: right operands are stream extraction targets (writes), not reads
+            if _is_operator_rshift(node):
+                if len(node.children) >= 2:
+                    lhs = node.children[1]
+                    _check_reads(lhs, in_lhs_of_assign=False, in_address_of=False)
+                return
+
+            # scanf/fscanf/sscanf: &x args are destination targets, not uninitialized reads
+            if node.kind == "CallExpr" and _is_scanf_call(node):
+                for arg in node.children[1:]:
+                    if not (arg.kind == "UnaryOperator" and arg.raw.get("opcode") == "&"):
+                        has_addr = any(c.kind == "UnaryOperator" and c.raw.get("opcode") == "&" for c in arg.children)
+                        if not has_addr:
+                            _check_reads(arg, in_lhs_of_assign=False, in_address_of=False)
+                return
+
+            # getline: second argument is string destination, not uninitialized read
+            if node.kind == "CallExpr" and _is_getline_call(node):
+                if len(node.children) >= 2:
+                    _check_reads(node.children[1], in_lhs_of_assign=False, in_address_of=False)
+                return
+
+            if node.kind == "RecoveryExpr":
+                names = [c.name for c in node.children if c.kind == "DeclRefExpr"]
+                if "cin" in names:
+                    return
+
+            if node.kind == "DeclRefExpr" and node.name and not in_lhs_of_assign and not in_address_of:
+                vname = node.name
+                if vname in var_state and var_state[vname] == "UNINITIALIZED":
+                    if vname not in reported_vars:
+                        findings.append(_make_finding(
+                            source_path,
+                            node.begin_line,
+                            node.begin_col,
+                            "High",
+                            "Uninitialized Memory",
+                            f"Variable '{vname}' is read before being initialized (declared uninitialized at line {var_decl_line.get(vname, node.begin_line)}).",
+                            f"Initialize '{vname}' at its point of declaration (e.g. 'int {vname} = 0;').",
+                            "static_scan"
+                        ))
+                        reported_vars.add(vname)
+                        return
+
+            for c in node.children:
+                _check_reads(c, in_lhs_of_assign, in_address_of)
+
+        for stmt in body.children:
+            if stmt.kind == "DeclStmt":
+                for var_node in stmt.children:
+                    if var_node.kind == "VarDecl" and var_node.name:
+                        tname = var_node.type_name
+                        if _is_primitive_type(tname):
+                            has_init = bool(var_node.children) or bool(var_node.raw.get("init"))
+                            if not has_init and source_lines and var_node.begin_line and 1 <= var_node.begin_line <= len(source_lines):
+                                src_line = source_lines[var_node.begin_line - 1]
+                                if re.search(rf"\b{re.escape(var_node.name)}\s*=", src_line):
+                                    has_init = True
+                            if not has_init:
+                                var_state[var_node.name] = "UNINITIALIZED"
+                                var_decl_line[var_node.name] = var_node.begin_line
+                            else:
+                                var_state[var_node.name] = "INITIALIZED"
+                continue
+
+            # Fallback source-line check for stream extraction, scanf, and getline
+            if source_lines and stmt.begin_line and 1 <= stmt.begin_line <= len(source_lines):
+                line_text = source_lines[stmt.begin_line - 1]
+                for vname in list(var_state.keys()):
+                    if var_state[vname] == "UNINITIALIZED":
+                        if re.search(rf">>\s*{re.escape(vname)}\b(?!\s*>)(?!\s*=)", line_text):
+                            var_state[vname] = "INITIALIZED"
+                        elif re.search(rf"\b(?:std::)?f?s?scanf\s*\([^;]*&\s*{re.escape(vname)}\b", line_text):
+                            var_state[vname] = "INITIALIZED"
+                        elif re.search(rf"\b(?:std::)?getline\s*\([^,]+,\s*{re.escape(vname)}\s*\)", line_text):
+                            var_state[vname] = "INITIALIZED"
+
+            if stmt.kind == "IfStmt":
+                cond = stmt.children[0] if len(stmt.children) >= 1 else None
+                then_branch = stmt.children[1] if len(stmt.children) >= 2 else None
+                else_branch = stmt.children[2] if len(stmt.children) >= 3 else None
+
+                if cond:
+                    _check_reads(cond)
+
+                then_writes = set()
+                if then_branch:
+                    _check_reads(then_branch)
+                    then_writes = _collect_writes(then_branch)
+
+                else_writes = set()
+                if else_branch:
+                    _check_reads(else_branch)
+                    else_writes = _collect_writes(else_branch)
+
+                if else_branch is not None:
+                    both_assigned = then_writes.intersection(else_writes)
+                    for v in both_assigned:
+                        var_state[v] = "INITIALIZED"
+                continue
+
+            _check_reads(stmt)
+
+            writes = _collect_writes(stmt)
+            for v in writes:
+                var_state[v] = "INITIALIZED"
+
+    return findings
+
+
+def _scan_divide_by_zero(ast_nodes: list[ASTNode], source_path: str) -> list[SecurityFinding]:
+    """
+    CWE-369: AST scan detecting integer division/modulo by zero:
+      1. Divisor is a literal zero (e.g. x / 0, x % 0).
+      2. Divisor is a variable provably assigned/initialized to zero without subsequent reassignment before use.
+    """
+    findings: list[SecurityFinding] = []
+    reported_locations: set[tuple[int, int]] = set()
+
+    def _unwrap_expr(node: ASTNode) -> ASTNode:
+        curr = node
+        while curr.children and curr.kind in ("ImplicitCastExpr", "ParenExpr", "MaterializeTemporaryExpr"):
+            curr = curr.children[0]
+        return curr
+
+    def _get_int_literal_val(node: ASTNode) -> Optional[int]:
+        unwrapped = _unwrap_expr(node)
+        if unwrapped.kind == "IntegerLiteral":
+            try:
+                raw_val = unwrapped.raw.get("value")
+                if raw_val is not None:
+                    return int(raw_val)
+            except Exception:
+                pass
+        elif unwrapped.kind == "UnaryOperator" and unwrapped.raw.get("opcode") == "-" and unwrapped.children:
+            child_val = _get_int_literal_val(unwrapped.children[0])
+            if child_val is not None:
+                return -child_val
+        return None
+
+    for func in ast_nodes:
+        if func.kind not in ("FunctionDecl", "CXXMethodDecl", "CXXConstructorDecl"):
+            continue
+        body = next((c for c in func.children if c.kind == "CompoundStmt"), None)
+        if not body:
+            continue
+
+        var_values: dict[str, Optional[int]] = {}
+
+        def _check_expression(node: ASTNode):
+            if node.kind in ("BinaryOperator", "CompoundAssignOperator"):
+                opcode = node.raw.get("opcode")
+                # Check division or modulo operators
+                if opcode in ("/", "%", "/=", "%=") and len(node.children) >= 2:
+                    # Recursively check LHS and RHS expressions first
+                    _check_expression(node.children[0])
+                    _check_expression(node.children[1])
+
+                    rhs = _unwrap_expr(node.children[1])
+                    loc_line = rhs.begin_line or node.begin_line
+                    loc_col = rhs.begin_col or node.begin_col
+                    loc_key = (loc_line, loc_col)
+
+                    # Case 1: Divisor is literal 0
+                    rhs_val = _get_int_literal_val(rhs)
+                    if rhs_val == 0:
+                        if loc_key not in reported_locations:
+                            reported_locations.add(loc_key)
+                            findings.append(_make_finding(
+                                source_path,
+                                loc_line,
+                                loc_col,
+                                "High",
+                                "Divide By Zero",
+                                f"Division by zero: literal 0 used as divisor at line {loc_line}.",
+                                "Ensure the divisor cannot evaluate to zero before division.",
+                                "static_scan",
+                            ))
+                        return
+
+                    # Case 2: Divisor is variable provably 0
+                    if rhs.kind == "DeclRefExpr" and rhs.name:
+                        vname = rhs.name
+                        if var_values.get(vname) == 0:
+                            if loc_key not in reported_locations:
+                                reported_locations.add(loc_key)
+                                findings.append(_make_finding(
+                                    source_path,
+                                    loc_line,
+                                    loc_col,
+                                    "High",
+                                    "Divide By Zero",
+                                    f"Division by zero: variable '{vname}' is 0 at line {loc_line}.",
+                                    f"Ensure '{vname}' is non-zero before division, or inject a runtime zero check.",
+                                    "static_scan",
+                                ))
+                            return
+                    return
+
+                if opcode == "=" and len(node.children) >= 2:
+                    # Assignment: first check RHS expression for any divide by zero
+                    _check_expression(node.children[1])
+                    lhs = _unwrap_expr(node.children[0])
+                    rhs = _unwrap_expr(node.children[1])
+                    if lhs.kind == "DeclRefExpr" and lhs.name:
+                        val = _get_int_literal_val(rhs)
+                        var_values[lhs.name] = val
+                    return
+
+                if opcode in ("+=", "-=", "*=", "/=", "%=", "&=", "|=", "^=", "<<=", ">>="):
+                    if node.children:
+                        _check_expression(node.children[0])
+                        if len(node.children) >= 2:
+                            _check_expression(node.children[1])
+                        lhs = _unwrap_expr(node.children[0])
+                        if lhs.kind == "DeclRefExpr" and lhs.name:
+                            var_values[lhs.name] = None
+                    return
+
+            if node.kind == "UnaryOperator":
+                opcode = node.raw.get("opcode")
+                if opcode in ("++", "--") and node.children:
+                    operand = _unwrap_expr(node.children[0])
+                    if operand.kind == "DeclRefExpr" and operand.name:
+                        var_values[operand.name] = None
+                elif opcode == "&" and node.children:
+                    # Taking address might mutate variable via pointer/reference
+                    operand = _unwrap_expr(node.children[0])
+                    if operand.kind == "DeclRefExpr" and operand.name:
+                        var_values[operand.name] = None
+
+            if node.kind == "CallExpr":
+                for arg in node.children:
+                    _check_expression(arg)
+                return
+
+            if node.kind == "CXXOperatorCallExpr":
+                # operator>> stream extraction
+                for arg in node.children:
+                    v = _get_decl_ref_name(arg)
+                    if v and v != "cin":
+                        var_values[v] = None
+                    _check_expression(arg)
+                return
+
+            for c in node.children:
+                _check_expression(c)
+
+        for stmt in body.children:
+            if stmt.kind == "DeclStmt":
+                for child in stmt.children:
+                    if child.kind == "VarDecl" and child.name:
+                        if child.children:
+                            init_expr = _unwrap_expr(child.children[0])
+                            _check_expression(init_expr)
+                            val = _get_int_literal_val(init_expr)
+                            var_values[child.name] = val
+                        else:
+                            var_values[child.name] = None
+                continue
+
+            _check_expression(stmt)
+
+    return findings
+
+
 def _scan_source_findings(source_path: str) -> list[SecurityFinding]:
     path = Path(source_path)
     if not path.exists():
@@ -307,12 +1008,25 @@ def _scan_source_findings(source_path: str) -> list[SecurityFinding]:
         return []
 
     findings: list[SecurityFinding] = []
+
+    # Week 7 & Week 10: Run structured AST scanners for CWE-476, CWE-457, and CWE-369
+    if parse_clang_ast:
+        try:
+            ast_nodes = parse_clang_ast(source_path)
+            if ast_nodes:
+                findings.extend(_scan_null_pointer_dereference(ast_nodes, source_path))
+                findings.extend(_scan_uninitialized_variable_use(ast_nodes, source_path))
+                findings.extend(_scan_divide_by_zero(ast_nodes, source_path))
+        except Exception:
+            pass
+
     state: dict[str, object] = {"in_block_comment": False, "raw_delim": None}
     scope_stack: list[dict[str, object]] = [
         {"start_line": 1, "malloc_lines": [], "free_seen": False}
     ]
     recent_sensitive_lines: list[int] = []
     freed_vars: dict[str, int] = {}
+    overflow_risk_vars: dict[str, int] = {}
     debug_guard_present = any(
         re.search(r"#\s*(?:if|ifdef|ifndef)\s+.*NDEBUG", line, re.IGNORECASE)
         for line in lines
@@ -453,16 +1167,44 @@ def _scan_source_findings(source_path: str) -> list[SecurityFinding]:
                 "Prefer indexing with explicit bounds checks or use standard container iterators.",
             )
 
+        # Bug 4.3 Fix: Track variables assigned INT_MAX/SIZE_MAX across lines
+        intmax_assign = re.search(r"\b([A-Za-z_]\w*)\s*=\s*(?:INT_MAX|SIZE_MAX|UINT_MAX|LONG_MAX|LLONG_MAX)\b", code_line)
+        if intmax_assign:
+            overflow_risk_vars[intmax_assign.group(1)] = line_no
+
+        # Original same-line check: arithmetic on INT_MAX/SIZE_MAX or size variables
+        # Note: Bounded compile-time constant sizeof multiplications (e.g. sizeof(int)*10) are safe and NOT flagged.
         if re.search(r"\b(?:[A-Za-z_]\w*\s*[\+\-\*/]\s*[A-Za-z_0-9()]+)\b", code_line) and (
             "INT_MAX" in code_line or "SIZE_MAX" in code_line or "sizeof" in code_line or re.search(r"\b(?:alloc|size|len|count|capacity)\b", code_line)
         ):
-            emit(
-                line_no,
-                "Integer Overflow",
-                "High",
-                "Arithmetic on size-like values may overflow before allocation or indexing.",
-                "Validate operands before arithmetic and use checked addition/multiplication for allocation sizes.",
-            )
+            is_safe_alloc = False
+            if "sizeof" in code_line and "INT_MAX" not in code_line and "SIZE_MAX" not in code_line:
+                m_alloc = re.search(r"sizeof\s*\([^)]+\)\s*\*\s*(\d+)", code_line) or re.search(r"(\d+)\s*\*\s*sizeof\s*\([^)]+\)", code_line)
+                if m_alloc:
+                    count_val = int(m_alloc.group(1))
+                    if count_val < 1000000:
+                        is_safe_alloc = True
+            if not is_safe_alloc:
+                emit(
+                    line_no,
+                    "Integer Overflow",
+                    "High",
+                    "Arithmetic on size-like values may overflow before allocation or indexing.",
+                    "Validate operands before arithmetic and use checked addition/multiplication for allocation sizes.",
+                )
+        # Cross-line check: arithmetic on a variable previously assigned a max sentinel
+        elif overflow_risk_vars:
+            for var_name in list(overflow_risk_vars):
+                if re.search(rf"\b{re.escape(var_name)}\s*=\s*{re.escape(var_name)}\s*[\+\-\*/]", code_line) or \
+                   re.search(rf"\b{re.escape(var_name)}\s*[\+\-\*/]=\s*", code_line) or \
+                   re.search(rf"\b{re.escape(var_name)}\s*\+\+", code_line):
+                    emit(
+                        line_no,
+                        "Integer Overflow",
+                        "High",
+                        f"Arithmetic on '{var_name}' which was assigned a max-boundary value (line {overflow_risk_vars[var_name]}); this will overflow.",
+                        "Validate operands before arithmetic and use checked addition/multiplication for allocation sizes.",
+                    )
 
         if "malloc(" in code_line:
             current_scope()["malloc_lines"].append(line_no)
@@ -471,10 +1213,10 @@ def _scan_source_findings(source_path: str) -> list[SecurityFinding]:
             for scope in scope_stack:
                 scope["free_seen"] = True
 
-        delete_match = _DELETE_RE.search(code_line)
-        if delete_match:
-            freed_vars[delete_match.group(1)] = line_no
+        # Bug 4.2 Fix: Check for double-free BEFORE updating freed_vars,
+        # so consecutive `delete p; delete p;` isn't masked by self-overwrite.
 
+        # First, check existing freed_vars for double-free and use-after-free
         for freed_name, freed_line in list(freed_vars.items()):
             if re.search(rf"\bdelete\s*(?:\[\])?\s*{re.escape(freed_name)}\s*;", code_line) and line_no != freed_line:
                 emit(
@@ -484,6 +1226,14 @@ def _scan_source_findings(source_path: str) -> list[SecurityFinding]:
                     "The same pointer appears to be deleted more than once.",
                     "Set the pointer to nullptr immediately after delete or switch to smart pointers.",
                 )
+            elif re.search(rf"\bfree\s*\(\s*{re.escape(freed_name)}\s*\)", code_line) and line_no != freed_line:
+                emit(
+                    line_no,
+                    "Double Free",
+                    "High",
+                    "The same pointer appears to be freed more than once.",
+                    "Set the pointer to nullptr immediately after free or switch to smart pointers.",
+                )
             if re.search(rf"\*\s*{re.escape(freed_name)}\b|{re.escape(freed_name)}\s*->|{re.escape(freed_name)}\s*\[", code_line):
                 emit(
                     line_no,
@@ -492,6 +1242,16 @@ def _scan_source_findings(source_path: str) -> list[SecurityFinding]:
                     "Memory appears to be accessed after it was freed.",
                     "Do not use the pointer after delete; prefer unique_ptr or reset the pointer to nullptr.",
                 )
+
+        # NOW update freed_vars after checks have run
+        delete_match = _DELETE_RE.search(code_line)
+        if delete_match:
+            freed_vars[delete_match.group(1)] = line_no
+
+        # Also track free() calls for double-free detection
+        free_match = re.search(r"\bfree\s*\(\s*([A-Za-z_]\w*)\s*\)", code_line)
+        if free_match:
+            freed_vars[free_match.group(1)] = line_no
 
         open_braces = code_line.count("{")
         close_braces = code_line.count("}")

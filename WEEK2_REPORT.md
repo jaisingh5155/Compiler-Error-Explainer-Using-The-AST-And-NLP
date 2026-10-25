@@ -68,7 +68,8 @@ Evaluated across vulnerable targets, safe decoy patterns, and clean baseline fil
 
 * **True Positives (TP):** 7
 * **False Negatives (FN):** 8
-* **False Positives (FP):** 1 (Safe function `filesystem()` flagged as command injection)
+* **False Positives (FP):** 1 (Safe function `filesystem()` flagged as command injection)  
+  *(Correction — September 26, 2026: Independent verification confirms that the original filesystem()-related finding's causal attribution was inaccurate; harmless function names like `filesystem()` are correctly handled with 0 findings by `security_analyzer.py` due to word-boundary matching, and the actual single measured false positive was `sec15_decoy_safe_alloc.cpp` due to same-line `sizeof(int) * 10` arithmetic).*
 * **True Negatives (TN):** 62
 * **Overall Precision:** **87.5%** (`7 / 8`)
 * **Overall Recall:** **46.7%** (`7 / 15`) — *More than half of valid security flaws remain undetected.*

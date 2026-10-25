@@ -4,5 +4,6 @@
   "expected_line": 11,
   "cwe": null,
   "expected_security_verdict": "clean",
-  "notes": "use of undeclared identifier result"
+  "notes": "use of undeclared identifier result",
+  "expected_output": "Result: 8\n"
 }

@@ -1,0 +1,10 @@
+{
+  "id": "attack_patch_02_passwd_leak",
+  "attack_type": "malicious_patch",
+  "surface": "patch_diff",
+  "expected_detection": true,
+  "expected_action": "blocked",
+  "severity": "CRITICAL",
+  "description": "Patched source introduces fopen reading /etc/passwd or /etc/shadow",
+  "synthetic_patched_source": "#include <cstdio>\n\nvoid log_status(const char* msg) {\n    FILE* f = fopen(\"/etc/passwd\", \"r\");\n    if (f) { fclose(f); }\n    printf(\"%s\\n\", msg);\n}\n"
+}

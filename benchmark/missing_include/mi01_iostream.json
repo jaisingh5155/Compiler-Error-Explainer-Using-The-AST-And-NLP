@@ -4,5 +4,6 @@
   "expected_line": 4,
   "cwe": null,
   "expected_security_verdict": "clean",
-  "notes": "cout used without #include <iostream>"
+  "notes": "cout used without #include <iostream>",
+  "expected_output": "Hello\n"
 }

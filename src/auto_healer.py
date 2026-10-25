@@ -9,6 +9,7 @@ Each public function follows the signature:
     fix_<category>(source: str, error: dict) -> str | None
 """
 
+from enum import IntEnum
 import re
 from typing import Optional
 
@@ -67,71 +68,15 @@ _CPP_KEYWORDS = [
 _VALID_KEYWORDS = set(_CPP_KEYWORDS)
 
 
+from lexer import mask_comments_and_strings as _dfa_mask_comments_and_strings
+
+
 def _mask_comments_and_strings(line: str) -> str:
     """
     Mask contents of string literals, char literals, and comments with spaces,
-    preserving character offsets and column positions.
+    preserving character offsets and column positions. Powered by formal DFA lexer.
     """
-    chars = list(line)
-    in_string = False
-    in_char = False
-    escape = False
-    i = 0
-    n = len(chars)
-    while i < n:
-        c = chars[i]
-        if in_string:
-            chars[i] = " "
-            if escape:
-                escape = False
-            elif c == "\\":
-                escape = True
-            elif c == '"':
-                in_string = False
-            i += 1
-            continue
-        if in_char:
-            chars[i] = " "
-            if escape:
-                escape = False
-            elif c == "\\":
-                escape = True
-            elif c == "'":
-                in_char = False
-            i += 1
-            continue
-        if c == "/" and i + 1 < n and chars[i + 1] == "/":
-            while i < n:
-                if chars[i] not in ("\n", "\r"):
-                    chars[i] = " "
-                i += 1
-            break
-        if c == "/" and i + 1 < n and chars[i + 1] == "*":
-            chars[i] = " "
-            chars[i + 1] = " "
-            i += 2
-            while i < n:
-                if chars[i] == "*" and i + 1 < n and chars[i + 1] == "/":
-                    chars[i] = " "
-                    chars[i + 1] = " "
-                    i += 2
-                    break
-                if chars[i] not in ("\n", "\r"):
-                    chars[i] = " "
-                i += 1
-            continue
-        if c == '"':
-            in_string = True
-            chars[i] = " "
-            i += 1
-            continue
-        if c == "'":
-            in_char = True
-            chars[i] = " "
-            i += 1
-            continue
-        i += 1
-    return "".join(chars)
+    return _dfa_mask_comments_and_strings(line)
 
 
 def _build_keyword_variant_map() -> dict[str, str]:
@@ -421,8 +366,6 @@ def fix_missing_closing_braces(source: str, _error: dict = None) -> Optional[str
         return source
 
     stack = []
-    in_block_comment = False
-    raw_delim = None
     previous_code_text = ""
     last_code_line_idx = None
 
@@ -438,78 +381,22 @@ def fix_missing_closing_braces(source: str, _error: dict = None) -> Optional[str
                 lines.insert(line_idx, "}\n")
                 return _join(lines)
 
-        i = 0
-        code_prefix = []
-        while i < len(line):
-            if raw_delim is not None:
-                raw_end = line.find(")" + raw_delim + '"', i)
-                if raw_end == -1:
-                    i = len(line)
-                    break
-                i = raw_end + len(raw_delim) + 2
-                raw_delim = None
-                continue
-
-            if in_block_comment:
-                comment_end = line.find("*/", i)
-                if comment_end == -1:
-                    i = len(line)
-                    break
-                i = comment_end + 2
-                in_block_comment = False
-                continue
-
-            if line.startswith("//", i):
-                break
-            if line.startswith("/*", i):
-                in_block_comment = True
-                i += 2
-                continue
-
-            raw_match = _RAW_STRING_START.match(line, i)
-            if raw_match:
-                raw_delim = raw_match.group(1)
-                i = raw_match.end()
-                continue
-
-            ch = line[i]
-            if ch in ("'", '"'):
-                quote = ch
-                i += 1
-                while i < len(line):
-                    if line[i] == "\\":
-                        i += 2
-                        continue
-                    if line[i] == quote:
-                        i += 1
-                        break
-                    i += 1
-                continue
-
+        masked = _mask_comments_and_strings(line)
+        for i, ch in enumerate(masked):
             if ch == "{":
                 indent = re.match(r"[ \t]*", line).group(0)
-                prefix_text = "".join(code_prefix).strip()
+                prefix_text = masked[:i].strip()
                 context = _brace_context(prefix_text, previous_code_text)
                 stack.append({
                     "line": line_idx + 1,
                     "indent": indent,
                     "context": context,
                 })
-                code_prefix.append(ch)
-                i += 1
-                continue
-
-            if ch == "}":
+            elif ch == "}":
                 if stack:
                     stack.pop()
-                code_prefix.append(ch)
-                i += 1
-                continue
 
-            code_prefix.append(ch)
-            i += 1
-
-        code_text = "".join(code_prefix).strip()
+        code_text = masked.strip()
         if code_text:
             previous_code_text = code_text
             last_code_line_idx = line_idx
@@ -725,8 +612,11 @@ def fix_syntax_error(source: str, error: dict) -> Optional[str]:
             lines[idx] = fixed + "\n"
             return _join(lines)
 
-    # Fix: broken int main signature
-    if "main" in stripped and "int main" not in stripped and "void main" not in stripped:
+    # Fix: broken int main signature or void main
+    if "main" in stripped and "int main" not in stripped:
+        if "void main" in stripped:
+            lines[idx] = re.sub(r'\bvoid\s+main\s*\(', 'int main(', stripped) + "\n"
+            return _join(lines)
         lines[idx] = re.sub(r'\bmain\s*\(', 'int main(', stripped) + "\n"
         return _join(lines)
 
@@ -806,11 +696,33 @@ def fix_name_resolution(source: str, error: dict) -> Optional[str]:
     return patched
 
 
+def _infer_type_from_expr(expr: str) -> str:
+    """Infer C++ type from expression literal or simple structure."""
+    expr = expr.strip()
+    if expr.startswith('"') and expr.endswith('"'):
+        return "std::string"
+    if expr.startswith("'") and expr.endswith("'"):
+        return "char"
+    if expr in ("true", "false"):
+        return "bool"
+    if re.match(r'^-?\d+\.\d*(?:f|F)?$', expr):
+        return "float" if expr.endswith(('f', 'F')) else "double"
+    if re.match(r'^-?\d+(?:u|U|l|L|ll|LL)?$', expr):
+        if 'll' in expr.lower():
+            return "long long"
+        if 'l' in expr.lower():
+            return "long"
+        return "int"
+    if re.match(r'^[0-9+\-*/% ()]+$', expr):
+        return "int"
+    return "auto"
+
+
 def fix_undeclared_variable(source: str, error: dict) -> Optional[str]:
     """
-    If a variable is used but never declared, insert a local auto declaration
-    before the first reported use, reusing the current line's initializer
-    when that intent is clear.
+    If a variable is used but never declared, insert a local declaration
+    with its true inferred type (from AST/context or initializer) rather than
+    blindly defaulting to auto.
     """
     msg = error.get("message", "")
     if not _is_undeclared_identifier_error(msg):
@@ -842,7 +754,10 @@ def fix_undeclared_variable(source: str, error: dict) -> Optional[str]:
     if initializer is None:
         return None
 
-    lines.insert(idx, f"{indent}auto {var} = {initializer};\n")
+    inferred_type = _infer_type_from_expr(initializer)
+    lines.insert(idx, f"{indent}{inferred_type} {var} = {initializer};\n")
+    if inferred_type == "std::string" and "#include <string>" not in source:
+        lines.insert(0, "#include <string>\n")
     return _join(lines)
 
 
@@ -889,7 +804,8 @@ def inject_division_guard(source: str, error: dict) -> Optional[str]:
     Insert a runtime zero check before a division whose divisor is a variable.
     """
     msg = error.get("message", "")
-    if not _is_division_by_zero_error(msg):
+    cat = error.get("category", "")
+    if not _is_division_by_zero_error(msg) and cat not in ("division_by_zero", "Divide By Zero", "Division By Zero"):
         return None
 
     lines = _lines(source)
@@ -941,7 +857,8 @@ def fix_division_by_zero(source: str, error: dict) -> Optional[str]:
     for variable divisors.
     """
     msg = error.get("message", "")
-    if not _is_division_by_zero_error(msg):
+    cat = error.get("category", "")
+    if not _is_division_by_zero_error(msg) and cat not in ("division_by_zero", "Divide By Zero", "Division By Zero"):
         return None
 
     line_no = error.get("line")
@@ -1196,7 +1113,249 @@ def fix_access_error(_source: str, _error: dict) -> None:
     return None
 
 
-# ── Dispatch table ────────────────────────────────────────────────────────────
+# ── Week 7: Safety-Tier Classification & Tiered Repair Engine ────────────────
+
+class SafetyTier(IntEnum):
+    """
+    Three-tier repair engine classification (Week 7):
+      - Tier 1: Compiler Fix-Its (-fdiagnostics-parseable-fixits). Direct toolchain suggestions.
+      - Tier 2: AST & Symbol-Table-Guided Rules (inferred types, deterministic includes, unsafe function replacements).
+      - Tier 3: Heuristic Regex Rules (fallback pattern transformations).
+    """
+    TIER_1_COMPILER = 1
+    TIER_2_AST = 2
+    TIER_3_HEURISTIC = 3
+
+    # Backward compatibility aliases
+    TIER_1_MECHANICAL = 1
+    TIER_2_SIGNATURE = 2
+
+
+TIER_METADATA = {
+    SafetyTier.TIER_1_COMPILER: {
+        "name": "Tier 1: Compiler Fix-It",
+        "description": "Direct compiler-suggested fix-it via -fdiagnostics-parseable-fixits.",
+        "confidence_range": (0.95, 1.0),
+    },
+    SafetyTier.TIER_2_AST: {
+        "name": "Tier 2: AST / Symbol-Table Rule",
+        "description": "Structured repairs using AST type inference, scoped symbol tables, and bounded function replacements.",
+        "confidence_range": (0.80, 0.94),
+    },
+    SafetyTier.TIER_3_HEURISTIC: {
+        "name": "Tier 3: Heuristic Regex Rule",
+        "description": "Heuristic regex pattern substitutions and fallback repairs.",
+        "confidence_range": (0.50, 0.79),
+    },
+}
+
+CATEGORY_TO_TIER = {
+    # Tier 1: Mechanical / Syntax
+    "missing_include": SafetyTier.TIER_1_MECHANICAL,
+    "missing_closing_brace": SafetyTier.TIER_1_MECHANICAL,
+    "syntax_error": SafetyTier.TIER_1_MECHANICAL,
+    "stream_operator": SafetyTier.TIER_1_MECHANICAL,
+
+    # Tier 2: Type / Signature & Scope
+    "type_error": SafetyTier.TIER_2_SIGNATURE,
+    "return_type_error": SafetyTier.TIER_2_SIGNATURE,
+    "redefinition": SafetyTier.TIER_2_SIGNATURE,
+    "name_resolution": SafetyTier.TIER_2_SIGNATURE,
+    "undeclared_variable": SafetyTier.TIER_2_SIGNATURE,
+
+    # Tier 3: Heuristic / Speculative
+    "uninitialized_memory": SafetyTier.TIER_3_HEURISTIC,
+    "integer_overflow": SafetyTier.TIER_3_HEURISTIC,
+    "division_by_zero": SafetyTier.TIER_3_HEURISTIC,
+}
+
+
+def get_safety_tier(category: str) -> SafetyTier:
+    """Return SafetyTier enum for a given error category."""
+    return CATEGORY_TO_TIER.get(category, SafetyTier.TIER_3_HEURISTIC)
+
+
+def get_tier_info(category: str) -> dict:
+    """Return human-readable metadata for a category's safety tier."""
+    tier = get_safety_tier(category)
+    meta = TIER_METADATA.get(tier, {})
+    return {
+        "tier": int(tier),
+        "tier_name": meta.get("name", f"Tier {int(tier)}"),
+        "tier_description": meta.get("description", ""),
+        "confidence_range": meta.get("confidence_range", (0.5, 0.5)),
+    }
+
+
+# ── Tier 1: Compiler Fix-Its ──────────────────────────────────────────────────
+
+def query_compiler_fixits(source: str, error: dict) -> Optional[dict]:
+    """
+    Tier 1: Query clang++ / g++ with -fdiagnostics-parseable-fixits.
+    Returns dict with patched_source and metadata if a fix-it was found and applied.
+    """
+    import subprocess
+    import tempfile
+
+    line_no = error.get("line")
+    msg = error.get("message", "").lower()
+    with tempfile.NamedTemporaryFile("w", suffix=".cpp", delete=False) as f:
+        f.write(source)
+        tmp_path = f.name
+
+    try:
+        proc = subprocess.run(
+            ["clang++", "-fsyntax-only", "-fdiagnostics-parseable-fixits", tmp_path],
+            capture_output=True,
+            text=True,
+            timeout=5,
+        )
+        pattern = re.compile(r'fix-it:"[^"]+":\{(\d+):(\d+)-(\d+):(\d+)\}:"(.*?)"(?:\r?\n|$)')
+        matches = pattern.findall(proc.stderr)
+        if not matches:
+            return None
+
+        col_no = error.get("column")
+        chosen = None
+        if col_no is not None:
+            for s_l, s_c, e_l, e_c, repl in matches:
+                if int(s_l) == int(line_no) and abs(int(s_c) - int(col_no)) <= 3:
+                    chosen = (int(s_l), int(s_c), int(e_l), int(e_c), repl)
+                    break
+        if not chosen:
+            for s_l, s_c, e_l, e_c, repl in matches:
+                if line_no is None or abs(int(s_l) - int(line_no)) <= 1:
+                    chosen = (int(s_l), int(s_c), int(e_l), int(e_c), repl)
+                    break
+
+        if not chosen:
+            return None
+
+        s_line, s_col, e_line, e_col, repl = chosen
+        repl = repl.encode("utf-8").decode("unicode_escape")
+
+        lines = source.splitlines(keepends=True)
+        if s_line < 1 or s_line > len(lines):
+            return None
+
+        if s_line == e_line:
+            target_line = lines[s_line - 1]
+            if s_col - 1 > len(target_line) or e_col - 1 > len(target_line):
+                return None
+            lines[s_line - 1] = target_line[:s_col - 1] + repl + target_line[e_col - 1:]
+        else:
+            first_line = lines[s_line - 1][:s_col - 1]
+            last_line = lines[e_line - 1][e_col - 1:] if e_line <= len(lines) else ""
+            lines[s_line - 1:e_line] = [first_line + repl + last_line]
+
+        patched = "".join(lines)
+        if patched == source:
+            return None
+
+        clean_repl = repl.strip()
+        if clean_repl in (";", "}", "{", ")", "(") or clean_repl.startswith("#include"):
+            safety = "S0"
+            desc = "Semantics-neutral: compiler-suggested syntax token insertion."
+        elif clean_repl in ("->", ".") or "::" in clean_repl:
+            safety = "S1"
+            desc = "Likely neutral: compiler-suggested member access / scope correction."
+        else:
+            safety = "S1"
+            desc = "Likely neutral: compiler-suggested fix-it replacement."
+
+        expected_structural_changes = None
+        if clean_repl == "int" and ("'main' must return 'int'" in msg or "main" in msg or "main" in error.get("raw", "")):
+            expected_structural_changes = {"main": "return_type"}
+
+        return {
+            "patched_source": patched,
+            "tier": 1,
+            "tier_name": "Tier 1: Compiler Fix-It",
+            "safety_level": safety,
+            "suggestion_only": (safety == "S2"),
+            "safety_description": desc,
+            "expected_structural_changes": expected_structural_changes,
+        }
+    except Exception:
+        return None
+    finally:
+        try:
+            os.unlink(tmp_path)
+        except Exception:
+            pass
+
+
+# ── Tier 2: Unsafe Function & Security Scanner Repairs ────────────────────────
+
+def fix_unsafe_functions(source: str, error: dict) -> Optional[dict]:
+    """
+    Tier 2: Repair rules for unsafe functions identified by the security scanner:
+      - gets(buf) -> fgets(buf, sizeof(buf), stdin) [Safety S1: neutral bounded replacement]
+      - sprintf(buf, ...) -> snprintf(buf, sizeof(buf), ...) [Safety S1: format-preserving bounded write]
+      - strcpy(dst, src) -> strncpy(dst, src, sizeof(dst) - 1); dst[sizeof(dst) - 1] = '\0'; [Safety S2: truncation changes semantics]
+    """
+    line_no = error.get("line")
+    lines = source.splitlines(keepends=True)
+    target_idx = (int(line_no) - 1) if (line_no and 0 <= int(line_no) - 1 < len(lines)) else None
+
+    # gets() -> fgets()
+    for i, l in enumerate(lines):
+        if target_idx is not None and i != target_idx:
+            continue
+        m = re.search(r"\bgets\s*\(\s*([A-Za-z_]\w*)\s*\)", l)
+        if m:
+            buf = m.group(1)
+            lines[i] = re.sub(r"\bgets\s*\(\s*" + re.escape(buf) + r"\s*\)", f"fgets({buf}, sizeof({buf}), stdin)", l)
+            return {
+                "patched_source": "".join(lines),
+                "tier": 2,
+                "tier_name": "Tier 2: AST / Symbol-Table Rule",
+                "safety_level": "S1",
+                "suggestion_only": False,
+                "safety_description": "Likely neutral: replaced obsolete unbounded gets() with bounded fgets() reading from stdin.",
+            }
+
+    # sprintf() -> snprintf()
+    for i, l in enumerate(lines):
+        if target_idx is not None and i != target_idx:
+            continue
+        m = re.search(r"\bsprintf\s*\(\s*([A-Za-z_]\w*)\s*,\s*(.+)\)", l)
+        if m:
+            buf = m.group(1)
+            lines[i] = re.sub(r"\bsprintf\s*\(\s*" + re.escape(buf) + r"\s*,\s*", f"snprintf({buf}, sizeof({buf}), ", l)
+            return {
+                "patched_source": "".join(lines),
+                "tier": 2,
+                "tier_name": "Tier 2: AST / Symbol-Table Rule",
+                "safety_level": "S1",
+                "suggestion_only": False,
+                "safety_description": "Likely neutral: bounded destination buffer with snprintf() preserving format string arguments.",
+            }
+
+    # strcpy() -> strncpy() with null-termination
+    for i, l in enumerate(lines):
+        if target_idx is not None and i != target_idx:
+            continue
+        m = re.search(r"(\s*)\bstrcpy\s*\(\s*([A-Za-z_]\w*)\s*,\s*([^);]+)\)\s*;\s*", l)
+        if m:
+            indent = m.group(1)
+            dst = m.group(2)
+            src = m.group(3).strip()
+            repl = f"{indent}strncpy({dst}, {src}, sizeof({dst}) - 1);\n{indent}{dst}[sizeof({dst}) - 1] = \'\\0\';\n"
+            lines[i] = repl
+            return {
+                "patched_source": "".join(lines),
+                "tier": 2,
+                "tier_name": "Tier 2: AST / Symbol-Table Rule",
+                "safety_level": "S2",
+                "suggestion_only": True,
+                "safety_description": "Changes meaning: truncates string if source exceeds destination buffer, modifying execution behavior. Suggestion only.",
+            }
+
+    return None
+
+
+# ── Dispatch table & Unfixable Categories ─────────────────────────────────────
 
 _HANDLERS = {
     "missing_include":  fix_missing_include,
@@ -1216,41 +1375,233 @@ _HANDLERS = {
     "access_error":     fix_access_error,
 }
 
-# Categories where we skip directly to user guidance (no point retrying)
 UNFIXABLE_CATEGORIES = {"linker_error", "access_error", "unused_variable"}
 
 
-def attempt_fix(source: str, error: dict) -> Optional[str]:
+# ── Entry Points: attempt_fix_tiered & attempt_fix ────────────────────────────
+
+def generate_candidate_repairs(source: str, error: dict) -> list[dict]:
     """
-    Main entry point.
-    Returns patched source string, or None if no fix could be applied.
+    Generate an ordered list of candidate patches across tiers (Week 8 Part 4):
+      - Tier 1: Compiler Fix-Its (-fdiagnostics-parseable-fixits)
+      - Tier 2: AST & Symbol-Table-Guided Rules (inferred types, deterministic includes, unsafe function repairs)
+      - Tier 3: Legacy Heuristic Regex Rules (fallback)
     """
     category = error.get("category", "other")
     msg = error.get("message", "").lower()
 
-    # Rule: Treat "function definition not allowed here" as missing_closing_brace
+    if category in UNFIXABLE_CATEGORIES:
+        return []
+
+    candidates: list[dict] = []
+    seen_sources = {source}
+
+    def _add_candidate(cand: Optional[dict]):
+        if not cand or not isinstance(cand, dict):
+            return
+        ps = cand.get("patched_source")
+        if ps and ps not in seen_sources:
+            seen_sources.add(ps)
+            candidates.append(cand)
+
+    # ── Tier 1: Compiler Fix-Its ──────────────────────────────────────────────
+    try:
+        tier1_res = query_compiler_fixits(source, error)
+        _add_candidate(tier1_res)
+    except Exception:
+        pass
+
+    # ── Tier 2: AST & Symbol-Table-Guided Rules ───────────────────────────────
+    # 2a. Unsafe functions (gets, sprintf, strcpy)
+    try:
+        unsafe_res = fix_unsafe_functions(source, error)
+        _add_candidate(unsafe_res)
+    except Exception:
+        pass
+
+    # 2b. Missing includes (deterministic symbol mapping)
+    if category == "missing_include" or (
+        category == "name_resolution" and any(sym in msg for sym in _SYMBOL_TO_HEADER)
+    ):
+        try:
+            patched_inc = fix_missing_include(source, error)
+            if patched_inc:
+                _add_candidate({
+                    "patched_source": patched_inc,
+                    "tier": 2,
+                    "tier_name": "Tier 2: AST / Symbol-Table Rule",
+                    "safety_level": "S0",
+                    "suggestion_only": False,
+                    "safety_description": "Semantics-neutral: added missing standard library header inclusion.",
+                })
+        except Exception:
+            pass
+
+    # 2c. Undeclared variable with true inferred type from AST/context
+    if category in ("undeclared_variable", "name_resolution") and _is_undeclared_identifier_error(msg):
+        try:
+            patched_var = fix_undeclared_variable(source, error)
+            if patched_var:
+                _add_candidate({
+                    "patched_source": patched_var,
+                    "tier": 2,
+                    "tier_name": "Tier 2: AST / Symbol-Table Rule",
+                    "safety_level": "S1",
+                    "suggestion_only": False,
+                    "safety_description": "Likely neutral: declared undeclared variable with true inferred type from initialization context.",
+                })
+        except Exception:
+            pass
+
+    # 2d. Scoped symbol resolution / std:: prefixing
+    if category == "name_resolution":
+        try:
+            patched_name = fix_name_resolution(source, error)
+            if patched_name:
+                _add_candidate({
+                    "patched_source": patched_name,
+                    "tier": 2,
+                    "tier_name": "Tier 2: AST / Symbol-Table Rule",
+                    "safety_level": "S1",
+                    "suggestion_only": False,
+                    "safety_description": "Likely neutral: resolved symbol name or qualified with std:: namespace.",
+                })
+        except Exception:
+            pass
+
+    # ── Tier 3: Legacy Heuristic Regex Rules (Fallback) ──────────────────────
     if "not allowed here" in msg or category == "missing_closing_brace":
-        patched = fix_missing_closing_braces(source, error)
-        if patched is not None and patched != source:
-            return patched
+        try:
+            patched = fix_missing_closing_braces(source, error)
+            if patched:
+                _add_candidate({
+                    "patched_source": patched,
+                    "tier": 3,
+                    "tier_name": "Tier 3: Heuristic Regex Rule",
+                    "safety_level": "S0",
+                    "suggestion_only": False,
+                    "safety_description": "Semantics-neutral: inserted missing closing brace.",
+                })
+        except Exception:
+            pass
 
     handler = _HANDLERS.get(category)
     if handler is not None:
-        patched = handler(source, error)
-        if patched is not None and patched != source:
-            return patched
+        try:
+            patched = handler(source, error)
+            if patched:
+                if category in ("missing_include", "missing_closing_brace", "stream_operator"):
+                    safety = "S0"
+                    desc = "Semantics-neutral: mechanical syntax correction."
+                elif category in ("type_error", "return_type_error", "redefinition", "name_resolution", "syntax_error"):
+                    if "expected ';'" in msg or "expected ';'" in error.get("raw", ""):
+                        safety = "S0"
+                        desc = "Semantics-neutral: appended missing semicolon."
+                    else:
+                        safety = "S1"
+                        desc = "Likely neutral: type cast, return value, or syntax correction."
+                else:
+                    safety = "S2"
+                    desc = "Changes meaning: altered expression semantics or runtime state. Suggestion only."
+
+                expected_structural_changes = None
+                if ("void main" in source or "main(" in source) and "int main(" in patched:
+                    expected_structural_changes = {"main": "return_type"}
+
+                _add_candidate({
+                    "patched_source": patched,
+                    "tier": 3,
+                    "tier_name": "Tier 3: Heuristic Regex Rule",
+                    "safety_level": safety,
+                    "suggestion_only": (safety == "S2"),
+                    "safety_description": desc,
+                    "expected_structural_changes": expected_structural_changes,
+                })
+        except Exception:
+            pass
 
     if _is_stream_operator_error(msg):
-        return fix_stream_operator(source, error)
-    if _is_unused_variable_error(msg):
-        return fix_unused_variable(source, error)
-    if _is_integer_overflow_error(msg):
-        return fix_integer_overflow(source, error)
-    if _is_division_by_zero_error(msg):
-        return fix_division_by_zero(source, error)
-    if _is_undeclared_identifier_error(msg):
-        return fix_name_resolution(source, error)
-    if _UNINIT_MESSAGE_RE.search(msg):
-        return fix_uninitialized_variable(source, error)
+        try:
+            patched = fix_stream_operator(source, error)
+            if patched:
+                _add_candidate({
+                    "patched_source": patched,
+                    "tier": 3,
+                    "tier_name": "Tier 3: Heuristic Regex Rule",
+                    "safety_level": "S0",
+                    "suggestion_only": False,
+                    "safety_description": "Semantics-neutral: corrected stream operator direction.",
+                })
+        except Exception:
+            pass
 
+    if _is_integer_overflow_error(msg):
+        try:
+            patched = fix_integer_overflow(source, error)
+            if patched:
+                _add_candidate({
+                    "patched_source": patched,
+                    "tier": 3,
+                    "tier_name": "Tier 3: Heuristic Regex Rule",
+                    "safety_level": "S2",
+                    "suggestion_only": True,
+                    "safety_description": "Changes meaning: widened integer expression to prevent overflow. Suggestion only.",
+                })
+        except Exception:
+            pass
+
+    if _is_division_by_zero_error(msg) or category in ("division_by_zero", "Divide By Zero", "Division By Zero"):
+        try:
+            patched = fix_division_by_zero(source, error)
+            if patched:
+                _add_candidate({
+                    "patched_source": patched,
+                    "tier": 3,
+                    "tier_name": "Tier 3: Heuristic Regex Rule",
+                    "safety_level": "S2",
+                    "suggestion_only": True,
+                    "safety_description": "Changes meaning: guarded divisor against zero division. Suggestion only.",
+                })
+        except Exception:
+            pass
+
+    if _UNINIT_MESSAGE_RE.search(msg):
+        try:
+            patched = fix_uninitialized_variable(source, error)
+            if patched:
+                _add_candidate({
+                    "patched_source": patched,
+                    "tier": 3,
+                    "tier_name": "Tier 3: Heuristic Regex Rule",
+                    "safety_level": "S2",
+                    "suggestion_only": True,
+                    "safety_description": "Changes meaning: initialized uninitialized variable with zero value. Suggestion only.",
+                })
+        except Exception:
+            pass
+
+    return candidates
+
+
+def attempt_fix_tiered(source: str, error: dict) -> Optional[dict]:
+    """
+    Tiered repair engine (Week 7):
+      - Tier 1: Compiler Fix-Its (-fdiagnostics-parseable-fixits)
+      - Tier 2: AST & Symbol-Table-Guided Rules (inferred types, deterministic includes, unsafe function repairs)
+      - Tier 3: Legacy Heuristic Regex Rules (fallback)
+    Returns highest-priority candidate patch dict, or None if no candidate could be generated.
+    """
+    cands = generate_candidate_repairs(source, error)
+    return cands[0] if cands else None
+
+
+def attempt_fix(source: str, error: dict) -> Optional[str]:
+    """
+    Main entry point for backward-compatible repairs.
+    Returns patched source string, or None if no fix could be applied.
+    """
+    res = attempt_fix_tiered(source, error)
+    if res and res.get("patched_source"):
+        return res["patched_source"]
     return None
+

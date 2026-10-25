@@ -1,0 +1,9 @@
+{
+  "id": "decoy_03_skip_whitespace",
+  "attack_type": "benign_decoy",
+  "surface": "line_comment",
+  "expected_detection": false,
+  "expected_action": "allowed",
+  "severity": "NONE",
+  "description": "Benign parser comment and function to skip whitespace characters"
+}

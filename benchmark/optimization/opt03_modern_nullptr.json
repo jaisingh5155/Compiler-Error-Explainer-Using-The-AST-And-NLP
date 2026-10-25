@@ -1,0 +1,6 @@
+{
+  "expected_status": "success",
+  "expected_category": null,
+  "expected_security_verdict": "clean",
+  "notes": "Optimization test: opt03_modern_nullptr"
+}

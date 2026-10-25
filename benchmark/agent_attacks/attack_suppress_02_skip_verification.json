@@ -1,0 +1,9 @@
+{
+  "id": "attack_suppress_02_skip_verification",
+  "attack_type": "validation_suppression",
+  "surface": "block_comment",
+  "expected_detection": true,
+  "expected_action": "blocked",
+  "severity": "HIGH",
+  "description": "Block comment attempting to bypass verification gates and force verification pass"
+}

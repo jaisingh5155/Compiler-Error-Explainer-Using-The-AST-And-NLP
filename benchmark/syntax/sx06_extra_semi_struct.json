@@ -4,5 +4,6 @@
   "expected_line": 7,
   "cwe": null,
   "expected_security_verdict": "clean",
-  "notes": "missing semicolon after struct definition"
+  "notes": "missing semicolon after struct definition",
+  "expected_output": ""
 }

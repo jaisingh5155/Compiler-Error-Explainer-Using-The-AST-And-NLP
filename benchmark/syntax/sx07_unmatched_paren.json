@@ -4,5 +4,6 @@
   "expected_line": 4,
   "cwe": null,
   "expected_security_verdict": "clean",
-  "notes": "unmatched opening parenthesis"
+  "notes": "unmatched opening parenthesis",
+  "expected_output": "7\n"
 }

@@ -1,0 +1,148 @@
+# BENCHMARK RESULTS — AGGREGATE SUMMARY
+# Date: 2026-10-07
+# Compiler Version: Apple clang version 21.0.0 (clang-2100.3.34.2)
+# Total benchmark files: 100
+#
+# CANONICAL DENOMINATORS (from manifest/metadata):
+#   Total files (Status denominator):         100
+#   Classification denominator:               54 (files with expected_category)
+#   Security denominator (vulnerable/clean):  19 vulnerable / 17 clean/decoy
+#   Auto-Healer denominator:                  53 (error files eligible for healing)
+#
+# STATUS ACCURACY: 99/100 (99.0%)
+# CLASSIFICATION ACCURACY: 53/54 (98.1%)
+#
+# SECURITY SCANNER:
+#   True Positives:  19
+#   False Negatives: 0
+#   False Positives: 0
+#   True Negatives:  81
+#   Precision: 1.000
+#   Recall:    1.000
+#   FP rate on clean/decoy files: 0/17 (0.0%)
+#
+# PER-CWE RECALL:
+#   CWE-120: 2/2 (100%)
+#   CWE-134: 1/1 (100%)
+#   CWE-190: 2/2 (100%)
+#   CWE-369: 2/2 (100%)
+#   CWE-401: 1/1 (100%)
+#   CWE-415: 2/2 (100%)
+#   CWE-416: 2/2 (100%)
+#   CWE-457: 2/2 (100%)
+#   CWE-476: 4/4 (100%)
+#   CWE-78: 1/1 (100%)
+#
+# AUTO-HEALER:
+#   Attempted:      53
+#   compiled_clean:  25
+#   gave_up:         28
+#   crashed:         0
+#   success rate:    47.2%
+#
+# TRAINING DATA MUTATION CHECK:
+#   Size before: 14719358 bytes, MD5: 0239658bf3b6c91064e89dba5e954d30
+#   Size after:  14719358 bytes, MD5: 0239658bf3b6c91064e89dba5e954d30
+#   Modified by benchmark run: No (safe)
+#
+filepath,category_dir,compiler_version,cwe,expected_status,actual_status,status_match,expected_category,actual_category,category_match,confidence,expected_security_verdict,actual_security_verdict,security_match,heal_outcome,gate_failures,notes
+benchmark/missing_include/mi01_iostream.cpp,missing_include,Apple clang version 21.0.0 (clang-2100.3.34.2),,error,error,True,missing_include,missing_include,True,1.0,clean,clean,True,compiled_clean,,cout used without #include <iostream>
+benchmark/missing_include/mi02_vector.cpp,missing_include,Apple clang version 21.0.0 (clang-2100.3.34.2),,success,success,True,,,,,clean,clean,True,not_applicable,,vector used without #include <vector>; compiles clean on Apple Clang/libc++ due to transitive includes from <iostream>
+benchmark/missing_include/mi03_string.cpp,missing_include,Apple clang version 21.0.0 (clang-2100.3.34.2),,success,success,True,,,,,clean,clean,True,not_applicable,,string used without #include <string>; compiles clean on Apple Clang/libc++ due to transitive includes from <iostream>
+benchmark/missing_include/mi04_map.cpp,missing_include,Apple clang version 21.0.0 (clang-2100.3.34.2),,error,error,True,missing_include,missing_include,True,1.0,clean,clean,True,compiled_clean,,map and string used without includes
+benchmark/missing_include/mi05_vector_standalone.cpp,missing_include,Apple clang version 21.0.0 (clang-2100.3.34.2),,error,error,True,missing_include,missing_include,True,1.0,clean,clean,True,compiled_clean,,vector used without #include <vector>
+benchmark/missing_include/mi06_algorithm_sort.cpp,missing_include,Apple clang version 21.0.0 (clang-2100.3.34.2),,error,error,True,missing_include,missing_include,True,1.0,clean,clean,True,compiled_clean,,std::sort used without #include <algorithm>
+benchmark/missing_include/mi07_utility_pair.cpp,missing_include,Apple clang version 21.0.0 (clang-2100.3.34.2),,error,error,True,missing_include,missing_include,True,1.0,clean,clean,True,compiled_clean,,pair/make_pair used without #include <utility>
+benchmark/name_resolution/nr01_undeclared_var.cpp,name_resolution,Apple clang version 21.0.0 (clang-2100.3.34.2),,error,error,True,name_resolution,name_resolution,True,0.9596,clean,clean,True,gave_up,,use of undeclared identifier y
+benchmark/name_resolution/nr02_undeclared_result.cpp,name_resolution,Apple clang version 21.0.0 (clang-2100.3.34.2),,error,error,True,name_resolution,name_resolution,True,0.9619,clean,clean,True,compiled_clean,,use of undeclared identifier result
+benchmark/name_resolution/nr03_keyword_retrun.cpp,name_resolution,Apple clang version 21.0.0 (clang-2100.3.34.2),,error,error,True,name_resolution,name_resolution,True,0.8211,clean,clean,True,compiled_clean,,keyword typo retrun instead of return
+benchmark/name_resolution/nr04_keyword_cosnt.cpp,name_resolution,Apple clang version 21.0.0 (clang-2100.3.34.2),,error,error,True,name_resolution,name_resolution,True,0.9608,clean,clean,True,compiled_clean,,keyword typo cosnt instead of const
+benchmark/name_resolution/nr05_undeclared_func.cpp,name_resolution,Apple clang version 21.0.0 (clang-2100.3.34.2),,error,error,True,name_resolution,name_resolution,True,0.959,clean,clean,True,gave_up,,call to undeclared function computeSum
+benchmark/name_resolution/nr06_misspelled_ident.cpp,name_resolution,Apple clang version 21.0.0 (clang-2100.3.34.2),,error,error,True,name_resolution,name_resolution,True,0.9609,clean,clean,True,compiled_clean,,misspelled variable name countr instead of counter
+benchmark/name_resolution/nr07_missing_std_prefix.cpp,name_resolution,Apple clang version 21.0.0 (clang-2100.3.34.2),,error,error,True,name_resolution,name_resolution,True,0.9433,clean,clean,True,compiled_clean,,cout/endl used without using namespace std or std:: prefix
+benchmark/name_resolution/nr08_wrong_scope.cpp,name_resolution,Apple clang version 21.0.0 (clang-2100.3.34.2),,error,error,True,name_resolution,name_resolution,True,0.9582,clean,clean,True,gave_up,,variable temp used outside its for-loop scope
+benchmark/security/sec01_cmd_inject.cpp,security,Apple clang version 21.0.0 (clang-2100.3.34.2),CWE-78,success,error,False,,other,,0.7318,vulnerable,vulnerable,True,not_applicable,,command injection via system() with user input
+benchmark/security/sec02_gets_overflow.cpp,security,Apple clang version 21.0.0 (clang-2100.3.34.2),CWE-120,success,success,True,,other,,0.4979,vulnerable,vulnerable,True,not_applicable,,buffer overflow via gets()
+benchmark/security/sec03_strcpy_overflow.cpp,security,Apple clang version 21.0.0 (clang-2100.3.34.2),CWE-120,success,success,True,,,,,vulnerable,vulnerable,True,not_applicable,,buffer overflow via strcpy without bounds check
+benchmark/security/sec04_format_string.cpp,security,Apple clang version 21.0.0 (clang-2100.3.34.2),CWE-134,success,success,True,,other,,0.911,vulnerable,vulnerable,True,not_applicable,,format string vulnerability: printf with user-controlled format
+benchmark/security/sec05_use_after_free.cpp,security,Apple clang version 21.0.0 (clang-2100.3.34.2),CWE-416,success,success,True,,,,,vulnerable,vulnerable,True,not_applicable,,use-after-free: deref deleted pointer
+benchmark/security/sec06_double_free.cpp,security,Apple clang version 21.0.0 (clang-2100.3.34.2),CWE-415,success,success,True,,,,,vulnerable,vulnerable,True,not_applicable,,double-free on same pointer
+benchmark/security/sec07_null_deref_direct.cpp,security,Apple clang version 21.0.0 (clang-2100.3.34.2),CWE-476,success,success,True,,,,,vulnerable,vulnerable,True,not_applicable,,null pointer dereference: direct
+benchmark/security/sec08_null_deref_struct.cpp,security,Apple clang version 21.0.0 (clang-2100.3.34.2),CWE-476,success,success,True,,,,,vulnerable,vulnerable,True,not_applicable,,null pointer dereference through struct member
+benchmark/security/sec09_null_deref_return.cpp,security,Apple clang version 21.0.0 (clang-2100.3.34.2),CWE-476,success,success,True,,,,,vulnerable,vulnerable,True,not_applicable,,null deref from function returning nullptr without check
+benchmark/security/sec10_integer_overflow.cpp,security,Apple clang version 21.0.0 (clang-2100.3.34.2),CWE-190,success,success,True,,,,,vulnerable,vulnerable,True,not_applicable,,signed integer overflow
+benchmark/security/sec11_uninit_use.cpp,security,Apple clang version 21.0.0 (clang-2100.3.34.2),CWE-457,success,success,True,,,,,vulnerable,vulnerable,True,not_applicable,,use of uninitialized variable
+benchmark/security/sec12_memory_leak.cpp,security,Apple clang version 21.0.0 (clang-2100.3.34.2),CWE-401,success,success,True,,,,,vulnerable,vulnerable,True,not_applicable,,memory leak: malloc in loop without free
+benchmark/security/sec13_decoy_filesystem.cpp,security,Apple clang version 21.0.0 (clang-2100.3.34.2),,success,success,True,,,,,clean,clean,True,not_applicable,,"DECOY: function named filesystem() is safe, not command injection"
+benchmark/security/sec14_decoy_safe_printf.cpp,security,Apple clang version 21.0.0 (clang-2100.3.34.2),,success,success,True,,,,,clean,clean,True,not_applicable,,"DECOY: printf with string literals, no format string vuln"
+benchmark/security/sec15_decoy_safe_alloc.cpp,security,Apple clang version 21.0.0 (clang-2100.3.34.2),,success,success,True,,,,,clean,clean,True,not_applicable,,DECOY: properly allocated and freed memory
+benchmark/security/sec16_decoy_safe_delete.cpp,security,Apple clang version 21.0.0 (clang-2100.3.34.2),,success,success,True,,,,,clean,clean,True,not_applicable,,"DECOY: properly deleted and nulled pointer, no UaF"
+benchmark/security/sec17_null_check_guarded.cpp,security,Apple clang version 21.0.0 (clang-2100.3.34.2),,success,success,True,,,,,clean,clean,True,not_applicable,,guarded null check prevents dereference when null
+benchmark/security/sec18_null_reassigned_valid.cpp,security,Apple clang version 21.0.0 (clang-2100.3.34.2),,success,success,True,,,,,clean,clean,True,not_applicable,,pointer reassigned to valid address before dereference
+benchmark/security/sec19_null_deref_struct_arrow.cpp,security,Apple clang version 21.0.0 (clang-2100.3.34.2),CWE-476,success,success,True,,,,,vulnerable,vulnerable,True,not_applicable,,null pointer dereference through struct member access pt->x
+benchmark/security/sec20_uninit_all_branches.cpp,security,Apple clang version 21.0.0 (clang-2100.3.34.2),,success,success,True,,,,,clean,clean,True,not_applicable,,variable initialized in all branches before use
+benchmark/security/sec21_uninit_branch_leak.cpp,security,Apple clang version 21.0.0 (clang-2100.3.34.2),CWE-457,success,success,True,,,,,vulnerable,vulnerable,True,not_applicable,,uninitialized variable used in else branch
+benchmark/security/sec22_uninit_output_param.cpp,security,Apple clang version 21.0.0 (clang-2100.3.34.2),,success,success,True,,,,,clean,clean,True,not_applicable,,output parameter pattern passed by address is initialized before use
+benchmark/security/sec23_divide_by_zero_literal.cpp,security,Apple clang version 21.0.0 (clang-2100.3.34.2),CWE-369,success,success,True,,other,,1.0,vulnerable,vulnerable,True,not_applicable,,division by literal zero
+benchmark/security/sec24_divide_by_zero_variable.cpp,security,Apple clang version 21.0.0 (clang-2100.3.34.2),CWE-369,success,success,True,,,,,vulnerable,vulnerable,True,not_applicable,,division by zero-valued variable
+benchmark/security/sec25_decoy_safe_division.cpp,security,Apple clang version 21.0.0 (clang-2100.3.34.2),,success,success,True,,,,,clean,clean,True,not_applicable,,DECOY: division by provably non-zero variable
+benchmark/return_type/rt01_return_string_from_int.cpp,return_type,Apple clang version 21.0.0 (clang-2100.3.34.2),,error,error,True,return_type_error,return_type_error,True,0.7076,clean,clean,True,gave_up,,return hello from int main()
+benchmark/return_type/rt02_void_main.cpp,return_type,Apple clang version 21.0.0 (clang-2100.3.34.2),,error,error,True,return_type_error,return_type_error,True,0.7368,clean,clean,True,compiled_clean,,void main() instead of int main()
+benchmark/return_type/rt03_missing_return.cpp,return_type,Apple clang version 21.0.0 (clang-2100.3.34.2),,success,success,True,return_type_error,return_type_error,True,0.8785,clean,clean,True,not_applicable,,non-void function missing return statement (warning on clang)
+benchmark/return_type/rt04_return_void_from_int.cpp,return_type,Apple clang version 21.0.0 (clang-2100.3.34.2),,error,error,True,return_type_error,return_type_error,True,0.8301,clean,clean,True,gave_up,,non-void function with bare return;
+benchmark/optimization/opt01_dead_code.cpp,optimization,Apple clang version 21.0.0 (clang-2100.3.34.2),,success,success,True,,,,,clean,clean,True,not_applicable,,Optimization test: opt01_dead_code
+benchmark/optimization/opt02_redundant_computation.cpp,optimization,Apple clang version 21.0.0 (clang-2100.3.34.2),,success,success,True,,,,,clean,clean,True,not_applicable,,Optimization test: opt02_redundant_computation
+benchmark/optimization/opt03_modern_nullptr.cpp,optimization,Apple clang version 21.0.0 (clang-2100.3.34.2),,success,success,True,,,,,clean,clean,True,not_applicable,,Optimization test: opt03_modern_nullptr
+benchmark/optimization/opt04_const_ref_param.cpp,optimization,Apple clang version 21.0.0 (clang-2100.3.34.2),,success,success,True,,,,,clean,clean,True,not_applicable,,Optimization test: opt04_const_ref_param
+benchmark/linker_errors/lk01_undef_func.cpp,linker_errors,Apple clang version 21.0.0 (clang-2100.3.34.2),,error,error,True,linker_error,linker_error,True,0.95,clean,clean,True,gave_up,,function declared but not defined
+benchmark/linker_errors/lk02_missing_main.cpp,linker_errors,Apple clang version 21.0.0 (clang-2100.3.34.2),,error,error,True,linker_error,linker_error,True,0.95,clean,clean,True,gave_up,,no main() function defined
+benchmark/linker_errors/lk03_undef_class_method.cpp,linker_errors,Apple clang version 21.0.0 (clang-2100.3.34.2),,error,error,True,linker_error,linker_error,True,0.95,clean,clean,True,gave_up,,class method declared but not defined
+benchmark/linker_errors/lk04_undef_extern_var.cpp,linker_errors,Apple clang version 21.0.0 (clang-2100.3.34.2),,error,error,True,linker_error,linker_error,True,0.95,clean,clean,True,gave_up,,extern variable declared but not defined
+benchmark/linker_errors/lk05_undef_template_spec.cpp,linker_errors,Apple clang version 21.0.0 (clang-2100.3.34.2),,error,error,True,linker_error,linker_error,True,0.95,clean,clean,True,gave_up,,template function declared but not instantiated/defined
+benchmark/clean/cl01_hello.cpp,clean,Apple clang version 21.0.0 (clang-2100.3.34.2),,success,success,True,,,,,clean,clean,True,not_applicable,,simple hello world
+benchmark/clean/cl02_math.cpp,clean,Apple clang version 21.0.0 (clang-2100.3.34.2),,success,success,True,,,,,clean,clean,True,not_applicable,,"math functions, no errors"
+benchmark/clean/cl03_loops.cpp,clean,Apple clang version 21.0.0 (clang-2100.3.34.2),,success,success,True,,,,,clean,clean,True,not_applicable,,"simple loop, no errors"
+benchmark/clean/cl04_struct.cpp,clean,Apple clang version 21.0.0 (clang-2100.3.34.2),,success,success,True,,,,,clean,clean,True,not_applicable,,"struct usage, no errors"
+benchmark/clean/cl05_class.cpp,clean,Apple clang version 21.0.0 (clang-2100.3.34.2),,success,success,True,,,,,clean,clean,True,not_applicable,,"class with constructor and method, no errors"
+benchmark/clean/cl06_vector.cpp,clean,Apple clang version 21.0.0 (clang-2100.3.34.2),,success,success,True,,,,,clean,clean,True,not_applicable,,"vector with sort, no errors"
+benchmark/clean/cl07_functions.cpp,clean,Apple clang version 21.0.0 (clang-2100.3.34.2),,success,success,True,,,,,clean,clean,True,not_applicable,,"recursive function, no errors"
+benchmark/clean/cl08_pointers.cpp,clean,Apple clang version 21.0.0 (clang-2100.3.34.2),,success,success,True,,,,,clean,clean,True,not_applicable,,valid pointer and reference usage
+benchmark/redefinition/rd01_global_var.cpp,redefinition,Apple clang version 21.0.0 (clang-2100.3.34.2),,error,error,True,redefinition,redefinition,True,0.9593,clean,clean,True,gave_up,"gate1_recompile: passed=False, failed gate1_recompile: Patch introduced new error: a type specifier is required for all declarations",global int x redefined
+benchmark/redefinition/rd02_duplicate_func.cpp,redefinition,Apple clang version 21.0.0 (clang-2100.3.34.2),,error,error,True,redefinition,redefinition,True,0.9738,clean,clean,True,gave_up,"gate1_recompile: passed=False, failed gate1_recompile: Patch introduced new error: a type specifier is required for all declarations",function foo() defined twice
+benchmark/redefinition/rd03_local_redef.cpp,redefinition,Apple clang version 21.0.0 (clang-2100.3.34.2),,error,error,True,redefinition,redefinition,True,0.9593,clean,clean,True,compiled_clean,,local variable x redefined in same scope
+benchmark/redefinition/rd04_enum_redef.cpp,redefinition,Apple clang version 21.0.0 (clang-2100.3.34.2),,error,error,True,redefinition,redefinition,True,0.9713,clean,clean,True,gave_up,,enum Color redefined
+benchmark/multi_error/me01_syntax_and_type.cpp,multi_error,Apple clang version 21.0.0 (clang-2100.3.34.2),,error,error,True,syntax_error,type_error,False,0.9683,clean,clean,True,gave_up,"gate1_recompile: passed=False, failed gate1_recompile: Target diagnostic was not resolved by patch: cannot initialize a variable of type 'int' with an lvalue of type 'const char[6]'","missing semicolon AND type mismatch (int = string literal), two independent errors"
+benchmark/multi_error/me02_redef_and_security.cpp,multi_error,Apple clang version 21.0.0 (clang-2100.3.34.2),CWE-415,error,error,True,redefinition,redefinition,True,0.9593,vulnerable,vulnerable,True,gave_up,,redefinition error blocks compilation; double-free should still be found by security scanner
+benchmark/multi_error/me03_missing_include_and_uaf.cpp,multi_error,Apple clang version 21.0.0 (clang-2100.3.34.2),CWE-416,success,success,True,,,,,vulnerable,vulnerable,True,not_applicable,,"missing #include <vector> AND use-after-free; compiles clean on Apple Clang/libc++ due to transitive includes from <iostream>, with pre-existing CWE-416 vulnerability"
+benchmark/multi_error/me04_name_and_overflow.cpp,multi_error,Apple clang version 21.0.0 (clang-2100.3.34.2),CWE-190,error,error,True,name_resolution,name_resolution,True,0.9596,vulnerable,vulnerable,True,gave_up,,undeclared y AND integer overflow; tests if security scanner works alongside compile error
+benchmark/multi_error/me05_two_type_errors.cpp,multi_error,Apple clang version 21.0.0 (clang-2100.3.34.2),,error,error,True,type_error,type_error,True,0.9683,clean,clean,True,gave_up,,two independent type errors in same function
+benchmark/multi_error/me06_cascade_semicolons.cpp,multi_error,Apple clang version 21.0.0 (clang-2100.3.34.2),,error,error,True,syntax_error,syntax_error,True,0.9293,clean,clean,True,compiled_clean,,Two missing semicolons produce cascading parse errors that should group under a single root cause
+benchmark/multi_error/me07_cascade_class_errors.cpp,multi_error,Apple clang version 21.0.0 (clang-2100.3.34.2),,error,error,True,syntax_error,syntax_error,True,0.9385,clean,clean,True,compiled_clean,,Missing semicolon in struct definition cascades into downstream undeclared identifier error
+benchmark/type_errors/te01_int_to_charptr.cpp,type_errors,Apple clang version 21.0.0 (clang-2100.3.34.2),,error,error,True,type_error,type_error,True,0.9773,clean,clean,True,gave_up,,cannot init char* with int
+benchmark/type_errors/te02_int_plus_string.cpp,type_errors,Apple clang version 21.0.0 (clang-2100.3.34.2),,error,error,True,type_error,type_error,True,0.9661,clean,clean,True,gave_up,,invalid operands int + string
+benchmark/type_errors/te03_void_to_int.cpp,type_errors,Apple clang version 21.0.0 (clang-2100.3.34.2),,error,error,True,type_error,type_error,True,0.9791,clean,clean,True,gave_up,,assigning void function result to int
+benchmark/type_errors/te04_wrong_arg_count.cpp,type_errors,Apple clang version 21.0.0 (clang-2100.3.34.2),,error,error,True,type_error,type_error,True,0.9667,clean,clean,True,gave_up,,too many arguments to function foo
+benchmark/type_errors/te05_wrong_stream_op.cpp,type_errors,Apple clang version 21.0.0 (clang-2100.3.34.2),,error,error,True,type_error,type_error,True,0.9652,clean,clean,True,compiled_clean,,cin << instead of cin >>
+benchmark/type_errors/te06_deref_non_pointer.cpp,type_errors,Apple clang version 21.0.0 (clang-2100.3.34.2),,error,error,True,type_error,type_error,True,0.9582,clean,clean,True,gave_up,,indirection on int (non-pointer)
+benchmark/type_errors/te07_bool_to_struct.cpp,type_errors,Apple clang version 21.0.0 (clang-2100.3.34.2),,error,error,True,type_error,type_error,True,0.9691,clean,clean,True,gave_up,,cannot init struct with bool
+benchmark/type_errors/te08_string_subtract.cpp,type_errors,Apple clang version 21.0.0 (clang-2100.3.34.2),,error,error,True,type_error,type_error,True,0.9603,clean,clean,True,gave_up,,no operator- for string
+benchmark/warnings_only/wo01_unused_var.cpp,warnings_only,Apple clang version 21.0.0 (clang-2100.3.34.2),,success,success,True,,,,,clean,clean,True,not_applicable,,"unused variable x, compiles with warning only"
+benchmark/warnings_only/wo02_unused_param.cpp,warnings_only,Apple clang version 21.0.0 (clang-2100.3.34.2),,success,success,True,,,,,clean,clean,True,not_applicable,,unused parameter times
+benchmark/warnings_only/wo03_sign_compare.cpp,warnings_only,Apple clang version 21.0.0 (clang-2100.3.34.2),,success,success,True,,,,,clean,clean,True,not_applicable,,signed/unsigned comparison warning (int vs size_t)
+benchmark/warnings_only/wo04_uninit_var.cpp,warnings_only,Apple clang version 21.0.0 (clang-2100.3.34.2),,success,success,True,,,,,clean,clean,True,not_applicable,,"uninitialized variable total, compiles as warning"
+benchmark/warnings_only/wo05_implicit_conversion.cpp,warnings_only,Apple clang version 21.0.0 (clang-2100.3.34.2),,success,success,True,,other,,0.5011,clean,clean,True,not_applicable,,"double -> int implicit conversion, warning only, exit code 0"
+benchmark/warnings_only/wo06_missing_return_warning.cpp,warnings_only,Apple clang version 21.0.0 (clang-2100.3.34.2),,success,success,True,,return_type_error,,0.8785,clean,clean,True,not_applicable,,"missing return in non-void function, warning only on clang (exit 0)"
+benchmark/syntax/sx01_missing_semi_decl.cpp,syntax,Apple clang version 21.0.0 (clang-2100.3.34.2),,error,error,True,syntax_error,syntax_error,True,0.9293,clean,clean,True,compiled_clean,,missing semicolon after int x = 10
+benchmark/syntax/sx02_missing_semi_multi.cpp,syntax,Apple clang version 21.0.0 (clang-2100.3.34.2),,error,error,True,syntax_error,syntax_error,True,0.9293,clean,clean,True,compiled_clean,,"missing semicolon, two variable declarations"
+benchmark/syntax/sx03_missing_brace.cpp,syntax,Apple clang version 21.0.0 (clang-2100.3.34.2),,error,error,True,syntax_error,syntax_error,True,1.0,clean,clean,True,compiled_clean,,missing closing brace for function greet()
+benchmark/syntax/sx04_missing_semi_string.cpp,syntax,Apple clang version 21.0.0 (clang-2100.3.34.2),,error,error,True,syntax_error,syntax_error,True,0.9605,clean,clean,True,compiled_clean,,missing semicolon after cout string literal (misnamed file)
+benchmark/syntax/sx05_missing_paren.cpp,syntax,Apple clang version 21.0.0 (clang-2100.3.34.2),,error,error,True,syntax_error,syntax_error,True,0.9283,clean,clean,True,gave_up,,missing parentheses around if condition
+benchmark/syntax/sx06_extra_semi_struct.cpp,syntax,Apple clang version 21.0.0 (clang-2100.3.34.2),,error,error,True,syntax_error,syntax_error,True,0.9406,clean,clean,True,compiled_clean,,missing semicolon after struct definition
+benchmark/syntax/sx07_unmatched_paren.cpp,syntax,Apple clang version 21.0.0 (clang-2100.3.34.2),,error,error,True,syntax_error,syntax_error,True,0.8739,clean,clean,True,compiled_clean,,unmatched opening parenthesis
+benchmark/syntax/sx08_double_semi_func_scope.cpp,syntax,Apple clang version 21.0.0 (clang-2100.3.34.2),,error,error,True,syntax_error,syntax_error,True,0.7567,clean,clean,True,compiled_clean,,missing semicolon in return statement inside helper function
+benchmark/syntax/sx09_missing_template_close.cpp,syntax,Apple clang version 21.0.0 (clang-2100.3.34.2),,error,error,True,syntax_error,syntax_error,True,0.9354,clean,clean,True,gave_up,,missing closing > in template argument
+benchmark/syntax/sx10_break_outside_loop.cpp,syntax,Apple clang version 21.0.0 (clang-2100.3.34.2),,error,error,True,syntax_error,syntax_error,True,0.95,clean,clean,True,gave_up,,break statement outside loop
+benchmark/syntax/sx11_nested_bracket_mismatch.cpp,syntax,Apple clang version 21.0.0 (clang-2100.3.34.2),,error,error,True,syntax_error,syntax_error,True,1.0,clean,clean,True,compiled_clean,,unclosed if block brace before function main
+benchmark/syntax/sx12_brackets_in_string.cpp,syntax,Apple clang version 21.0.0 (clang-2100.3.34.2),,error,error,True,syntax_error,syntax_error,True,0.948,clean,clean,True,compiled_clean,,unclosed parenthesis following string with braces
+benchmark/syntax/sx13_deeply_nested_unclosed.cpp,syntax,Apple clang version 21.0.0 (clang-2100.3.34.2),,error,error,True,syntax_error,syntax_error,True,0.9409,clean,clean,True,compiled_clean,,deeply nested unclosed if brace inside for loop
+benchmark/syntax/sx14_mismatched_paren_bracket.cpp,syntax,Apple clang version 21.0.0 (clang-2100.3.34.2),,error,error,True,syntax_error,syntax_error,True,0.8783,clean,clean,True,gave_up,,bracket opened with [ closed with )

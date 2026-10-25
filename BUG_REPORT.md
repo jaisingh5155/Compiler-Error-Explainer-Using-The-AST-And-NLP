@@ -288,7 +288,7 @@ warning at compile time, so the diagnostic rule never fires either.
 ---
 
 ### Bug 4.2 · P1 · Broken Detection Logic: Double-Free (CWE-415) dictionary sequencing defect
-**CLASSIFICATION: BROKEN DETECTION LOGIC (WEEK 4 QUICK WIN)**
+**STATUS: RESOLVED** (Week 4)
 
 **What happens:** The scanner has existing detection logic for double-free using `freed_vars` tracking via `_DELETE_RE`. But in line 476, `freed_vars[delete_match.group(1)] = line_no` executes *before* the double-free check runs. On the second delete, this assignment immediately overwrites the tracked line number with the current line number, causing the subsequent check `if freed_name in freed_vars and line_no != freed_line` to evaluate to `line_no != line_no` (False), completely blinding the detector to double-frees.
 
@@ -299,12 +299,12 @@ warning at compile time, so the diagnostic rule never fires either.
 
 **Where it lives:** [`src/security_analyzer.py` lines 474-486](file:///Users/jaisinghsaini/TOACD/cd1/src/security_analyzer.py#L474-L486)
 
-**Fix Scope:** Small, contained, same-file logic fix (reorder the dictionary update to occur *after* the double-free check, and add support for `free()`). Fixable in Week 4 as a quick win; does NOT require Week 7 dataflow tracking.
+**Fix Applied (Week 4):** Reordered the double-free check to run **before** updating `freed_vars`, so consecutive `delete p; delete p;` is no longer self-masked. Also added `free()` call tracking alongside `delete` for C-style double-free detection. Verified: sec06 and me02 now correctly report "Double Free" findings.
 
 ---
 
 ### Bug 4.3 · P1 · Broken Detection Logic: Integer Overflow (CWE-190) single-line regex defect
-**CLASSIFICATION: BROKEN DETECTION LOGIC (WEEK 4 QUICK WIN)**
+**STATUS: RESOLVED** (Week 4)
 
 **What happens:** The scanner has existing detection logic for integer overflow (lines 456-465). However, the regex pattern requires both the sentinel keyword (`INT_MAX`, `SIZE_MAX`, `sizeof`, etc.) AND the arithmetic operator (`+`, `*`) on the *exact same line*. Standard real-world code (including `me04_name_and_overflow.cpp`: `int x = INT_MAX; x = x + 1;`) splits the declaration and the arithmetic across separate lines, causing the existing check to fail.
 
@@ -315,7 +315,7 @@ warning at compile time, so the diagnostic rule never fires either.
 
 **Where it lives:** [`src/security_analyzer.py` lines 456-465](file:///Users/jaisinghsaini/TOACD/cd1/src/security_analyzer.py#L456-L465)
 
-**Fix Scope:** Contained logic fix (track variables assigned `INT_MAX`/`SIZE_MAX` across statements or relax the regex). Fixable in Week 4 as a quick win; does NOT require Week 7 dataflow tracking.
+**Fix Applied (Week 4):** Added cross-line variable tracking via `overflow_risk_vars` dict. Variables assigned `INT_MAX`, `SIZE_MAX`, `UINT_MAX`, `LONG_MAX`, or `LLONG_MAX` are tracked, and arithmetic on those variables on subsequent lines now triggers the "Integer Overflow" finding. Verified: sec10 and me04 now correctly report findings.
 
 ---
 
@@ -335,6 +335,63 @@ the scope-stack logic may be miscounting braces around `if (!p) return 1;`.
 
 **Fix direction:** Improve brace-counting to handle early-return guards, or track
 free at the variable level rather than scope level.
+
+---
+
+### Bug 4.6 · P1 · CWE-369 (Divide By Zero) has no detector in the current pipeline
+**STATUS: RESOLVED (Week 10)**
+
+**What happens:** Genuine divide-by-zero code (such as `int b = 0; cout << a / b;` or `int result = dividend / divisor;` with `divisor = 0`) produces **zero findings** from `detect()`. The tool logs `0 total findings (0 errors, 0 warnings)` and terminates with `Clean compilation`. 
+
+**Root Cause Analysis:**
+1. **Senior Project Legacy Stubbed Out:** The original senior project's `heal_loop.py` contained a regex-based `_pre_scan()` function that detected literal division by zero (`/\s*0\b`) and zero-initialized divisor variables (`\bint\s+([A-Za-z_]\w*)\s*=\s*0\s*;` followed by `/\s*var\b`). During the Week 4 refactor to the modular tool architecture (`tools/understand.py`, `tools/detect.py`, `tools/repair.py`), `_pre_scan()` in `heal_loop.py` was replaced with an empty backward-compatibility stub (`def _pre_scan(source): return []`) and was never ported into `tools/detect.py` or `security_analyzer.py`.
+2. **Missing Detector Rule in `security_analyzer.py`:** The active static security analyzer covers 9 vulnerability classes (CWE-78, 120, 134, 190, 401, 415, 416, 457, 476). It contains **zero AST visitors, regex rules, or diagnostic patterns for CWE-369 (Divide By Zero)**.
+3. **Compiler Default Behavior:** Standard compilers (Apple Clang and GNU GCC) treat division by a zero-valued variable as runtime undefined behavior rather than emitting compile-time diagnostics under default flags. Consequently, `understand()` parses 0 compiler diagnostics and the file compiles cleanly with exit code 0.
+4. **Dead Repair Handlers in `auto_healer.py`:** While `auto_healer.py` contains `fix_division_by_zero` and `inject_division_guard`, these handlers are only invoked if a division-by-zero diagnostic is supplied by upstream tools—which never occurs.
+
+**Evidence:**
+- `test_cases/mini/tc09_division_by_zero.cpp` — produces 0 diagnostics from compiler, 0 security findings from `security_analyzer.py`, and `Clean compilation` from `Planner`.
+- Backend trace verification:
+  ```
+  [Step 1] Tool: UNDERSTAND -> 0 diagnostics parsed
+  [Step 2] Tool: DETECT -> 0 total findings (0 errors, 0 warnings)
+  [Step 3] Tool: PLANNER -> Clean compilation
+  ```
+
+**Where it lives:**
+- [`src/security_analyzer.py`](file:///Users/jaisinghsaini/TOACD/cd1/src/security_analyzer.py): Lacks any CWE-369 detection logic in `analyze()` and `_DIAGNOSTIC_RULES`.
+- [`src/heal_loop.py` line 78](file:///Users/jaisinghsaini/TOACD/cd1/src/heal_loop.py#L78): Legacy `_pre_scan()` function is an empty stub returning `[]`.
+- [`src/tools/detect.py`](file:///Users/jaisinghsaini/TOACD/cd1/src/tools/detect.py): Relies solely on compiler diagnostics and `security_analyzer.py`.
+
+**Why it matters:** Divide-by-zero is a major software flaw (CWE-369) that causes immediate crashes (`SIGFPE`) at runtime. It represents a complete blind spot in the static analysis and self-healing pipeline.
+
+**Fix Applied (Week 10):**
+1. **AST-Based Detector (`_scan_divide_by_zero`):** Implemented structured AST visitor in [`src/security_analyzer.py`](file:///Users/jaisinghsaini/TOACD/cd1/src/security_analyzer.py) that traverses Clang JSON ASTs to inspect all division and remainder operators (`/`, `%`, `/=`, `%=`). Flags expressions where the divisor is either a literal 0 or a local variable provably initialized/assigned to 0 with no subsequent reassignment or mutation (`++`, `--`, etc.) before use.
+2. **CWE Mapping & Diagnostic Rules:** Added canonical `"Divide By Zero": "CWE-369"` and `"Division By Zero": "CWE-369"` to `VULNERABILITY_CWE_MAP` and added compiler warning pattern matcher `division by zero|divide by zero|remainder by zero` to `_DIAGNOSTIC_RULES`.
+3. **End-to-End Repair Activation:** Connected detection diagnostics to `auto_healer.py`'s `fix_division_by_zero` and `inject_division_guard`, tagging candidate patches with `safety_level="S2"`, `suggestion_only=True`.
+4. **Benchmark Verification:** Added benchmark test cases [`benchmark/security/sec23_divide_by_zero_literal.cpp`](file:///Users/jaisinghsaini/TOACD/cd1/benchmark/security/sec23_divide_by_zero_literal.cpp) (literal 0), [`benchmark/security/sec24_divide_by_zero_variable.cpp`](file:///Users/jaisinghsaini/TOACD/cd1/benchmark/security/sec24_divide_by_zero_variable.cpp) (variable 0), and [`benchmark/security/sec25_decoy_safe_division.cpp`](file:///Users/jaisinghsaini/TOACD/cd1/benchmark/security/sec25_decoy_safe_division.cpp) (safe decoy).
+5. **Scope Disclosure:** Statically tracks literal zeroes and local variables within lexical function blocks. Path-dependent symbolic constraints, runtime user input (`std::cin >> x`), and complex inter-procedural dataflow across multiple compilation units remain beyond the scope of local AST analysis.
+
+---
+
+### Historical Record Correction · September 26, 2026: Status of the `filesystem()` Word-Boundary Issue
+
+**Historical Context:** Prior to Week 1, initial project analysis identified that a harmless function named `filesystem()` was flagged as a forbidden command injection. In `WEEK2_REPORT.md`, the single decoy false positive was narratively labeled as `filesystem()`.
+
+**Week 5 Benchmark Verification & True Status:**
+1. **Security Scanner Result (CLEAN — Decoy Passes):** In `BENCHMARK_RESULTS_WEEK5.csv` (row 65) as well as Weeks 2, 3, and 4, `benchmark/security/sec13_decoy_filesystem.cpp` is recorded as:
+   - `expected_security_verdict`: `clean`
+   - `actual_security_verdict`: `clean`
+   - `security_match`: `True`
+   - `security_findings`: `[]` (0 findings)
+   The security scanner ([`src/security_analyzer.py` line 355](file:///Users/jaisinghsaini/TOACD/cd1/src/security_analyzer.py#L355)) uses word boundary regex `r"\bsystem\s*\("`, so it does not flag `filesystem()` as a security vulnerability. The single measured security decoy false positive in Weeks 2–5 has always been `sec15_decoy_safe_alloc.cpp` (due to same-line `sizeof(int) * 10` arithmetic; Bug 4.4).
+2. **Compiler Runner Status Mismatch (The Originating Bug):** In `BENCHMARK_RESULTS_WEEK5.csv`, `sec13_decoy_filesystem.cpp` failed its compilation status check:
+   - `expected_status`: `success`
+   - `actual_status`: `error` (`status_match`: `False`)
+   - Compiler message: `"Security Error: Malicious command injection or forbidden system call detected."`
+   This confirms where the original bug actually lived: [`src/compiler_runner.py` line 16](file:///Users/jaisinghsaini/TOACD/cd1/src/compiler_runner.py#L16) checks `dangerous_patterns.extend([r'system\s*\(', ...])` without a word boundary (`\b`), which treats `filesystem(...)` as an illegal system call and blocks compilation.
+3. **Summary:** The `filesystem()` command-injection bug was never present in the security scanner (`security_analyzer.py`), but did exist in the compiler pre-execution gate (`compiler_runner.py`).
+4. **Fix Applied (Pre-Week 6 Quick Win):** Updated `config.yaml` (`security.blocked_patterns`), `src/config_loader.py`, and `src/compiler_runner.py` with word boundary anchors `\b` (`r'\bsystem\s*\('`, `r'\bexec\s*\('`, `r'\bpopen\s*\('`, `r'\bfork\s*\('`, `r'\b__asm__\b'`, `r'\bshellcode\b'`). Verified against `sec13_decoy_filesystem.cpp`: `actual_status` transitioned from `error` to `success` and `status_match` flipped to `True`. Full benchmark re-run confirmed `sec13` was the ONLY file whose result changed, elevating overall benchmark status accuracy from 79/84 (94.0%) to 80/84 (95.2%). Added permanent regression test [`tests/test_sanitizer_word_boundary.py`](file:///Users/jaisinghsaini/TOACD/cd1/tests/test_sanitizer_word_boundary.py).
 
 ---
 
@@ -426,6 +483,13 @@ linker errors (0%).
 
 **Fix direction:** Expand type_error handlers; add linker error awareness; improve
 the redefinition handler to delete the duplicate.
+
+---
+
+### Bug 5.3 · P1 · Regression in `nr04_keyword_cosnt.cpp` healing undetected by verification
+**STATUS: RESOLVED** (Item-3 Fallback Engine)
+
+**Regression Note:** In Week 8, `benchmark/name_resolution/nr04_keyword_cosnt.cpp` regressed from `compiled_clean` (which had consistently held across Weeks 2–7) to `gave_up` when Tier 1 Clang Fix-It priority (`count`) preempted Tier 2 keyword typo matching (`const`) without candidate fallback, remaining undetected despite Week 8's "zero regressions" claim because Week 8's verification process validated isolated gate test cases rather than running a full benchmark CSV diff.
 
 ---
 

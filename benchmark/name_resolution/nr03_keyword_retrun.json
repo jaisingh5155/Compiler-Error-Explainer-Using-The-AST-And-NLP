@@ -4,5 +4,6 @@
   "expected_line": 9,
   "cwe": null,
   "expected_security_verdict": "clean",
-  "notes": "keyword typo retrun instead of return"
+  "notes": "keyword typo retrun instead of return",
+  "expected_output": "3 + 4 = 7\n"
 }

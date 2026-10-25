@@ -1,0 +1,149 @@
+[
+  {
+    "scenario": "A",
+    "file": "benchmark/syntax/sx01_missing_semi_decl.cpp",
+    "cli_analyze_stdout": "\n1 issue(s) found:\n\n\n\u001b[91m\u001b[1mERROR:expected ';' at end of declaration\u001b[0m\n  \u001b[95mLocation:\u001b[0m /var/folders/zk/r8dmr9xs6919_s2h3cbv6t1r0000gn/T/w9_scen_a_vjye8rbc/sx01_cli.cpp (line 5, column 15)\n\n  \u001b[95m\u001b[1mExplanation:\u001b[0m\n  \u001b[95mWhat happened:  The compiler expected a ';' (at end of declaration).\u001b[0m\n\n  \u001b[95mWhy it happened:  C++ grammar rules were violated in a variable declaration\nstatement. The parser could not parse the token sequence.\u001b[0m\n\n  \u001b[95mHow to fix it:  Check the reported line and preceding line for missing\nsemicolons (`;`), unclosed braces/parentheses, or stray tokens.\u001b[0m\n\n\n  \u001b[92m\u001b[1mSuggestion:\u001b[0m\n  \u001b[92mFix syntax error near the reported location.\u001b[0m\n\n  \u001b[93m\u001b[1mSecurity Assessment:\u001b[0m\n  \u001b[93mRisk Level: None\u001b[0m\n\n  \u001b[1mCode Context:\u001b[0m\n    3: \n    4: int main() {\n  \u2192 5:     int x = 10\n    6:     cout << x << endl;\n    7:     return 0;\n\n1 error(s), 0 warning(s)\n\n0 critical, 0 high, 0 medium, 0 low findings\n\nRisk score: 0 (Clean)\n",
+    "cli_heal_stdout": "Healing status: success (1 iterations)\n\n========================================================================\nAGENT EXECUTION TRACE\n========================================================================\n\n[Step 1] Tool: UNDERSTAND\n  Input : /var/folders/zk/r8dmr9xs6919_s2h3cbv6t1r0000gn/T/w9_scen_a_vjye8rbc/sx01_cli.cpp\n  Output: 1 diagnostics parsed\n  Action: Initial analysis complete\n\n[Step 2] Tool: DETECT\n  Input : Model with 1 diags\n  Output: 1 total findings (1 errors, 0 warnings)\n  Action: Evaluate findings for repair\n\n[Step 3] Tool: REPAIR\n  Input : Finding line 5: expected ';' at end of declaration\n  Output: 1 candidate patch(es) generated\n  Action: Evaluate candidate patches through verify()\n\n[Step 4] Tool: VERIFY\n  Input : Candidate 1/1 (Tier 1: Compiler Fix-It, 8 diff lines, S0)\n  Output: passed=True across all gates, 0 diagnostics\n  Action: Apply patch and refresh model\n  Verification Gates:\n        [PASSED] gate1_recompile\n            Reason: Target diagnostic resolved and no new errors/warnings introduced.\n        [PASSED] gate2_diff_size\n            Reason: Diff size (2 modified lines: +1/-1) is within S0 threshold of 4 lines.\n        [PASSED] gate3_ast_diff\n            Reason: AST structure preserved: function declarations, signatures, and counts unchanged.\n        [PASSED] gate4_security_regression\n            Reason: No security regressions introduced (0 post-patch findings).\n        [SKIPPED] gate5_differential_execution\n            Reason: Inapplicable: Pre-patch source does not compile, no baseline execution exists.\n\n[Step 5] Tool: UNDERSTAND\n  Input : /var/folders/zk/r8dmr9xs6919_s2h3cbv6t1r0000gn/T/w9_scen_a_vjye8rbc/sx01_cli.cpp\n  Output: Model refreshed: 0 diags remaining\n  Action: Continue loop with refreshed model\n\n[Step 6] Tool: PLANNER\n  Input : 0 remaining errors\n  Output: Program healed successfully\n  Action: Goal met: compilation clean\n\n========================================================================\n",
+    "trace_steps": [
+      {
+        "step": 1,
+        "tool_called": "understand",
+        "input_summary": "/var/folders/zk/r8dmr9xs6919_s2h3cbv6t1r0000gn/T/w9_scen_a_vjye8rbc/sx01_gui.cpp",
+        "output_summary": "1 diagnostics parsed",
+        "decision": "Initial analysis complete"
+      },
+      {
+        "step": 2,
+        "tool_called": "detect",
+        "input_summary": "Model with 1 diags",
+        "output_summary": "1 total findings (1 errors, 0 warnings)",
+        "decision": "Evaluate findings for repair"
+      },
+      {
+        "step": 3,
+        "tool_called": "repair",
+        "input_summary": "Finding line 5: expected ';' at end of declaration",
+        "output_summary": "1 candidate patch(es) generated",
+        "decision": "Evaluate candidate patches through verify()"
+      },
+      {
+        "step": 4,
+        "tool_called": "verify",
+        "input_summary": "Candidate 1/1 (Tier 1: Compiler Fix-It, 8 diff lines, S0)",
+        "output_summary": "passed=True across all gates, 0 diagnostics",
+        "decision": "Apply patch and refresh model",
+        "gate_details": [
+          {
+            "gate": "gate1_recompile",
+            "status": "passed",
+            "passed": true,
+            "reason": "Target diagnostic resolved and no new errors/warnings introduced."
+          },
+          {
+            "gate": "gate2_diff_size",
+            "status": "passed",
+            "passed": true,
+            "reason": "Diff size (2 modified lines: +1/-1) is within S0 threshold of 4 lines."
+          },
+          {
+            "gate": "gate3_ast_diff",
+            "status": "passed",
+            "passed": true,
+            "reason": "AST structure preserved: function declarations, signatures, and counts unchanged."
+          },
+          {
+            "gate": "gate4_security_regression",
+            "status": "passed",
+            "passed": true,
+            "reason": "No security regressions introduced (0 post-patch findings)."
+          },
+          {
+            "gate": "gate5_differential_execution",
+            "status": "skipped",
+            "passed": null,
+            "reason": "Inapplicable: Pre-patch source does not compile, no baseline execution exists."
+          }
+        ]
+      },
+      {
+        "step": 5,
+        "tool_called": "understand",
+        "input_summary": "/var/folders/zk/r8dmr9xs6919_s2h3cbv6t1r0000gn/T/w9_scen_a_vjye8rbc/sx01_gui.cpp",
+        "output_summary": "Model refreshed: 0 diags remaining",
+        "decision": "Continue loop with refreshed model"
+      },
+      {
+        "step": 6,
+        "tool_called": "planner",
+        "input_summary": "0 remaining errors",
+        "output_summary": "Program healed successfully",
+        "decision": "Goal met: compilation clean"
+      }
+    ],
+    "gui_trace_step_count": 6,
+    "gui_cards_count": 1
+  },
+  {
+    "scenario": "B",
+    "file": "benchmark/security/sec06_double_free.cpp",
+    "cli_stdout": "Compilation successful\n\n0 critical, 1 high, 0 medium, 0 low findings\n\nHIGH\n[HIGH] Double Free - /Users/jaisinghsaini/TOACD/cd1/benchmark/security/sec06_double_free.cpp:6\n  Description: The same pointer appears to be deleted more than once.\n  Recommendation: Set the pointer to nullptr immediately after delete or switch to smart pointers.\n\nRisk score: 5 (Low Risk)\n",
+    "cwe": "CWE-415",
+    "vuln_type": "Double Free",
+    "line": 6,
+    "risk_badge": "Risk Score: 5 \u2022 Low Risk",
+    "gui_findings_count": 1
+  },
+  {
+    "scenario": "C",
+    "file": "benchmark/redefinition/rd01_global_var.cpp",
+    "cli_stdout": "Healing status: no_fixable_finding (1 iterations)\n\n========================================================================\nAGENT EXECUTION TRACE\n========================================================================\n\n[Step 1] Tool: UNDERSTAND\n  Input : /var/folders/zk/r8dmr9xs6919_s2h3cbv6t1r0000gn/T/w9_scen_c_hciotno0/rd01_global_var.cpp\n  Output: 1 diagnostics parsed\n  Action: Initial analysis complete\n\n[Step 2] Tool: DETECT\n  Input : Model with 1 diags\n  Output: 1 total findings (1 errors, 0 warnings)\n  Action: Evaluate findings for repair\n\n[Step 3] Tool: REPAIR\n  Input : Finding line 5: redefinition of 'x'\n  Output: 1 candidate patch(es) generated\n  Action: Evaluate candidate patches through verify()\n\n[Step 4] Tool: VERIFY\n  Input : Candidate 1/1 (Tier 3: Heuristic Regex Rule, 8 diff lines, S1)\n  Output: passed=False, failed gate1_recompile: Patch introduced new error: a type specifier is required for all declarations\n  Action: Reject candidate and try fallback (failed gate1_recompile)\n  Verification Gates:\n    --> [FAILED] gate1_recompile (FAILING)\n            Reason: Patch introduced new error: a type specifier is required for all declarations\n        [PASSED] gate2_diff_size\n            Reason: Diff size (2 modified lines: +1/-1) is within S1 threshold of 8 lines.\n        [PASSED] gate3_ast_diff\n            Reason: AST structure preserved: function declarations, signatures, and counts unchanged.\n        [PASSED] gate4_security_regression\n            Reason: No security regressions introduced (0 post-patch findings).\n        [SKIPPED] gate5_differential_execution\n            Reason: Inapplicable: Pre-patch source does not compile, no baseline execution exists.\n  >>> REJECTED BY: gate1_recompile <<<\n\n[Step 5] Tool: PLANNER\n  Input : 1 findings evaluated\n  Output: 1 unfixable\n  Action: Stop: no fixable finding found\n\n========================================================================\n",
+    "planner_status": "no_fixable_finding",
+    "suggestions_count": 1,
+    "patches_applied": 0,
+    "file_intact": true,
+    "sha256": "f1c418323d535b9e436ef018ff2f29654d5d9c8ce575f210f2322b6b63026e7b"
+  },
+  {
+    "scenario": "D",
+    "batch_dir": "/var/folders/zk/r8dmr9xs6919_s2h3cbv6t1r0000gn/T/w9_scen_d_batch_ka5s75qd",
+    "summary": {
+      "total_files": 5,
+      "healed": 2,
+      "gave_up": 1,
+      "not_applicable": 2,
+      "crashed": 0,
+      "attempted": 3,
+      "heal_success_rate": 0.6667,
+      "heal_success_percent": "66.7%",
+      "patches_by_safety_tier": {
+        "Tier 2: AST / Symbol-Table Rule": 1,
+        "Tier 1: Compiler Fix-It": 1
+      },
+      "gate_failure_breakdown": {
+        "gate1_recompile": 1
+      },
+      "security_findings_by_cwe": {
+        "CWE-415": 1
+      },
+      "total_time": 61.6,
+      "apply": false
+    },
+    "per_file": {
+      "cl01_hello.cpp": "not_applicable",
+      "mi01_iostream.cpp": "healed",
+      "rd01_global_var.cpp": "gave_up",
+      "sec06_double_free.cpp": "not_applicable",
+      "sx01_missing_semi_decl.cpp": "healed"
+    },
+    "raw_cli_output": "Starting batch evaluation on: /var/folders/zk/r8dmr9xs6919_s2h3cbv6t1r0000gn/T/w9_scen_d_batch_ka5s75qd\nMode: SAFE SIMULATION (read-only)\nPer-file timeout: 60s\n\n  [1/5] cl01_hello.cpp -> \u001b[95mN/A\u001b[0m (2.25s)\n  [2/5] mi01_iostream.cpp -> \u001b[92mHEALED\u001b[0m (7.42s)\n  [3/5] rd01_global_var.cpp -> \u001b[93mGAVE UP\u001b[0m (21.36s)\n  [4/5] sec06_double_free.cpp -> \u001b[95mN/A\u001b[0m (2.33s)\n  [5/5] sx01_missing_semi_decl.cpp -> \u001b[92mHEALED\u001b[0m (23.71s)\n\nReport written to: /var/folders/zk/r8dmr9xs6919_s2h3cbv6t1r0000gn/T/w9_scen_d_batch_ka5s75qd/batch_report.json\n\n============================================================\nBATCH EVALUATION SUMMARY\n============================================================\nTotal Files:       5\nAttempted Heals:   3\nHealed (Clean):    2 (66.7%)\nGave Up:           1\nNot Applicable:    2\nCrashed:           0\nTotal Time:        61.60s\nApplied to Disk:   False\n============================================================\n"
+  },
+  {
+    "scenario": "E",
+    "message": "expected ';' at end of declaration",
+    "reviewed_before": false,
+    "reviewed_after": true,
+    "cli_review_output": "Approved 1 feedback records for training merge.",
+    "retraining_exit_code": 0,
+    "retraining_stdout": "Loading training data from: /Users/jaisinghsaini/TOACD/cd1/data/training_data_v2.json\n[feedback] --include-feedback enabled; loading from /Users/jaisinghsaini/TOACD/cd1/data/confirmed_feedback.json\n[feedback] Merged 2 reviewed records into train split (leakage_skipped=0, dedup_skipped=0).\nDataset split: Train=2747, Val=591, Test=610 (Total base=3946)\n  Feedback rows merged into train: 2 (leakage_skipped=0, dedup_skipped=0)\n\nTraining and comparing models on program-split dataset...\n================================================================================\nCandidate                           | Val Acc  | Val F1   | Test Acc | Test F1 \n--------------------------------------------------------------------------------\nLogistic Regression                 | 0.9255   | 0.9013   | 0.9803   | 0.9486  \nLinear SVM (Platt Calibrated)       | 0.9611   | 0.9285   | 0.9934   | 0.9557  \nComplement Naive Bayes (Calibrated) | 0.8697   | 0.7334   | 0.9410   | 0.8587  \n================================================================================\n\n[WINNER] Selected: 'Linear SVM (Platt Calibrated)' (Test Macro-F1 = 0.9557)\n\nDialect Generalization on Held-Out Test Split:\n  GCC Samples (586):   Acc = 0.9932, Macro-F1 = 0.9554\n  Clang Samples (24): Acc = 1.0000, Macro-F1 = 1.0000\n  Gap (GCC vs Clang): Acc Gap = 0.0068, F1 Gap = 0.0446\n\nSaved winning model to: /Users/jaisinghsaini/TOACD/cd1/data/error_classifier_v2.joblib\nSaved metadata pinning scikit-learn version 1.7.2 to: /Users/jaisinghsaini/TOACD/cd1/data/error_classifier_v2_metadata.json\n"
+  }
+]

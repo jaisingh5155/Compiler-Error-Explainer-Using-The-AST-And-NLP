@@ -11,15 +11,25 @@ def _sanitize_code(source: str, permissions: dict = None) -> bool:
         }
     
     dangerous_patterns = []
-    
+
+    try:
+        from config_loader import get as cfg_get
+        blocked = cfg_get("security", "blocked_patterns") or {}
+    except Exception:
+        blocked = {}
+
+    system_calls = blocked.get("system_calls", [r'\bsystem\s*\(', r'\bexec\s*\(', r'\bpopen\s*\(', r'\bfork\s*\('])
+    assembly = blocked.get("assembly", [r'\b__asm__\b', r'\bshellcode\b'])
+    sys_includes = blocked.get("sys_includes", [r'#include\s*[<"]\s*sys/'])
+
     if not permissions.get("allow_system_calls", False):
-        dangerous_patterns.extend([r'system\s*\(', r'exec\s*\(', r'popen\s*\(', r'fork\s*\('])
+        dangerous_patterns.extend(system_calls)
         
     if not permissions.get("allow_assembly", False):
-        dangerous_patterns.extend([r'__asm__', r'shellcode'])
+        dangerous_patterns.extend(assembly)
         
     if not permissions.get("allow_sys_includes", False):
-        dangerous_patterns.extend([r'#include\s*[<"]\s*sys/'])
+        dangerous_patterns.extend(sys_includes)
 
     for pattern in dangerous_patterns:
         if re.search(pattern, source):
@@ -32,7 +42,7 @@ def _sanitize_input(file_path: str, permissions: dict = None) -> bool:
     with open(file_path, 'r', errors='ignore') as f:
         return _sanitize_code(f.read(), permissions)
 
-def run_cpp_compiler(file_path, permissions=None):
+def run_cpp_compiler(file_path, permissions=None, timeout=10.0):
     if not _sanitize_input(file_path, permissions):
         return [{
             "file": file_path,
@@ -42,19 +52,38 @@ def run_cpp_compiler(file_path, permissions=None):
             "message": "Security Error: Malicious command injection or forbidden system call detected.",
             "raw": "error: Malicious command injection or forbidden system call detected."
         }]
+
     try:
-        res=subprocess.run(
-            ["g++","-std=c++17",file_path],
-            stdout=subprocess.PIPE,
-            stderr=subprocess.PIPE,
-            text=True,
+        from sandbox import compile_sandboxed
+        # CXX_OVERRIDE allows a non-default compiler binary for verification runs
+        # (e.g. CXX_OVERRIDE=g++-14 for GNU GCC testing).
+        # When absent the pipeline uses the original default "g++" unchanged.
+        _compiler = os.environ.get("CXX_OVERRIDE", "g++")
+        compile_res = compile_sandboxed(
+            file_path,
+            compiler=_compiler,
+            extra_flags=["-std=c++17"],
+            timeout=timeout,
         )
 
-        errors=[]
-        pattern=r"(.+):(\d+):(\d+):\s+(error|warning):\s+(.*)"
+        if "compiler not found" in (compile_res.stderr or "").lower() and compile_res.returncode == -1:
+            raise FileNotFoundError()
 
-        for line in res.stderr.splitlines():
-            match=re.match(pattern, line)
+        if compile_res.timed_out:
+            return [{
+                "file": file_path,
+                "line": None,
+                "column": None,
+                "type": "error",
+                "message": f"Compilation timed out after {timeout}s (resource limit exceeded)",
+                "raw": f"error: compilation timed out after {timeout}s"
+            }]
+
+        errors = []
+        pattern = r"(.+):(\d+):(\d+):\s+(error|warning):\s+(.*)"
+
+        for line in compile_res.stderr.splitlines():
+            match = re.match(pattern, line)
             if match:
                 errors.append({
                     "file": match.group(1),
@@ -66,8 +95,8 @@ def run_cpp_compiler(file_path, permissions=None):
                 })
 
         # Bug 1.2: Check compiler returncode for linker errors if no line:col errors matched
-        if res.returncode != 0 and not errors:
-            stderr_text = res.stderr.strip()
+        if compile_res.returncode != 0 and not errors:
+            stderr_text = compile_res.stderr.strip()
             sym_match = re.search(r'^\s*"([^"]+)",\s*referenced from:', stderr_text, re.MULTILINE)
             if sym_match:
                 msg = f"undefined reference to '{sym_match.group(1)}'"
@@ -90,11 +119,11 @@ def run_cpp_compiler(file_path, permissions=None):
         return errors
 
     except FileNotFoundError:
-        return[{
-            "file":None,
-            "line":None,
-            "column":None,
-            "type":"error",
-            "message":"g++ compiler not found.",
-            "raw":"g++ compiler not found."
+        return [{
+            "file": None,
+            "line": None,
+            "column": None,
+            "type": "error",
+            "message": "g++ compiler not found.",
+            "raw": "g++ compiler not found."
         }]

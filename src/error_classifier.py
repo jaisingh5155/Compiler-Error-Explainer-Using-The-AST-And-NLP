@@ -14,8 +14,11 @@ import numpy as np
 
 _PROJECT_ROOT = os.path.dirname(os.path.dirname(__file__))
 _DEFAULT_DATA_DIR = os.path.join(_PROJECT_ROOT, "data")
-_DEFAULT_TRAINING_DATA_FILE = os.path.join(_DEFAULT_DATA_DIR, "training_data.json")
-_DEFAULT_MODEL_FILE = os.path.join(_DEFAULT_DATA_DIR, "error_classifier.joblib")
+_DEFAULT_TRAINING_DATA_FILE = os.path.join(_DEFAULT_DATA_DIR, "training_data_v2.json")
+_LEGACY_TRAINING_DATA_FILE = os.path.join(_DEFAULT_DATA_DIR, "training_data.json")
+_MODEL_V2_FILE = os.path.join(_DEFAULT_DATA_DIR, "error_classifier_v2.joblib")
+_LEGACY_MODEL_FILE = os.path.join(_DEFAULT_DATA_DIR, "error_classifier.joblib")
+_DEFAULT_MODEL_FILE = _MODEL_V2_FILE if os.path.exists(_MODEL_V2_FILE) else _LEGACY_MODEL_FILE
 
 # ── Canonical category set ────────────────────────────────────────────────────
 # Covers both old labels and new codenet labels.
@@ -29,6 +32,7 @@ CATEGORY_ALIASES = {
 
     # new codenet names (already canonical)
     "syntax_error":     "syntax_error",
+    "missing_closing_brace": "syntax_error",
     "type_error":       "type_error",
     "missing_include":  "missing_include",
     "redefinition":     "redefinition",
@@ -153,11 +157,27 @@ def _normalize_clang_dialect(message: str) -> str:
 class ErrorClassifier:
     def __init__(
         self,
-        model_file: str = _DEFAULT_MODEL_FILE,
-        training_data_file: str = _DEFAULT_TRAINING_DATA_FILE,
+        model_file: Optional[str] = None,
+        training_data_file: Optional[str] = None,
+        use_legacy_model: bool = False,
     ) -> None:
-        self.model_file         = model_file
-        self.training_data_file = training_data_file
+        if use_legacy_model or os.getenv("USE_LEGACY_CLASSIFIER") == "1":
+            self.model_file = _LEGACY_MODEL_FILE
+            self.training_data_file = training_data_file or _LEGACY_TRAINING_DATA_FILE
+            self.is_v2 = False
+        elif model_file is not None:
+            self.model_file = model_file
+            self.training_data_file = training_data_file or _DEFAULT_TRAINING_DATA_FILE
+            self.is_v2 = "v2" in os.path.basename(model_file)
+        else:
+            if os.path.exists(_MODEL_V2_FILE):
+                self.model_file = _MODEL_V2_FILE
+                self.training_data_file = training_data_file or _DEFAULT_TRAINING_DATA_FILE
+                self.is_v2 = True
+            else:
+                self.model_file = _LEGACY_MODEL_FILE
+                self.training_data_file = training_data_file or _LEGACY_TRAINING_DATA_FILE
+                self.is_v2 = False
         self._pipeline: Optional[Pipeline] = None
 
     def is_trained(self) -> bool:
@@ -235,20 +255,30 @@ class ErrorClassifier:
         self.train()
         self.save()
 
-    def predict(self, message: str, ast_node: str = "") -> Tuple[Optional[str], float]:
+    def predict(
+        self,
+        message: str,
+        ast_node: str = "",
+        ast_fallback: Optional[bool] = None,
+        symbol_signal: str = "unknown",
+    ) -> Tuple[Optional[str], float]:
         if not message:
             return None, 0.0
 
-        # Bug 2.1: Lightweight Clang-to-GCC dialect normalization mitigation.
-        # Maps known Apple Clang diagnostic phrasings to canonical GCC-equivalent wording
-        # so the pre-trained GCC-biased TF-IDF model correctly classifies them.
-        # NOTE: This is a contained mitigation for Week 3; the full architectural fix
-        # is the dual-dialect dataset rebuild and retrain in Week 6.
         message = _normalize_clang_dialect(message)
 
         lowered = message.lower()
-        if "a function-definition is not allowed here" in lowered:
-            return "missing_closing_brace", 1.0
+        if "a function-definition is not allowed here" in lowered or "function definition is not allowed here" in lowered:
+            return "syntax_error", 1.0
+
+        if any(phrase in lowered for phrase in (
+            "break statement not",
+            "'break' statement not in loop",
+            "continue statement not",
+            "'continue' statement not in loop",
+            "case label not within a switch",
+        )):
+            return "syntax_error", 0.95
             
         if any(phrase in lowered for phrase in (
             "used uninitialized",
@@ -281,7 +311,14 @@ class ErrorClassifier:
 
         assert self._pipeline is not None
 
-        feature_str = f"{ast_node} {message}".strip()
+        if self.is_v2:
+            ast_str = ast_node if ast_node else "none"
+            fb_str = "true" if ast_fallback is True else ("false" if ast_fallback is False else "none")
+            sym_str = symbol_signal if symbol_signal else "unknown"
+            feature_str = f"ast_{ast_str} fallback_{fb_str} sym_{sym_str} {message}"
+        else:
+            feature_str = f"{ast_node} {message}".strip()
+
         try:
             proba = self._pipeline.predict_proba([feature_str])
             idx   = int(proba[0].argmax())

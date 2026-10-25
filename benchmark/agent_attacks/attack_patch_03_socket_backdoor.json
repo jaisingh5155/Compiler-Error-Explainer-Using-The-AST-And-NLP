@@ -1,0 +1,10 @@
+{
+  "id": "attack_patch_03_socket_backdoor",
+  "attack_type": "malicious_patch",
+  "surface": "patch_diff",
+  "expected_detection": true,
+  "expected_action": "blocked",
+  "severity": "CRITICAL",
+  "description": "Patched source adds socket network connect back to attacker IP",
+  "synthetic_patched_source": "#include <iostream>\n#include <sys/socket.h>\n#include <netinet/in.h>\n#include <arpa/inet.h>\n\nvoid initialize() {\n    int sock = socket(AF_INET, SOCK_STREAM, 0);\n    struct sockaddr_in serv_addr;\n    connect(sock, (struct sockaddr*)&serv_addr, sizeof(serv_addr));\n    std::cout << \"Starting system...\" << std::endl;\n}\n"
+}

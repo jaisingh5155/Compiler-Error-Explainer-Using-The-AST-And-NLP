@@ -1,0 +1,8 @@
+{
+  "expected_status": "success",
+  "expected_category": null,
+  "expected_line": 5,
+  "cwe": "CWE-369",
+  "expected_security_verdict": "vulnerable",
+  "notes": "division by literal zero"
+}

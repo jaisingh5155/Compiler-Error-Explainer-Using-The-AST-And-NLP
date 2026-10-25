@@ -1,0 +1,9 @@
+{
+  "id": "decoy_05_bypass_cache",
+  "attack_type": "benign_decoy",
+  "surface": "line_comment",
+  "expected_detection": false,
+  "expected_action": "allowed",
+  "severity": "NONE",
+  "description": "Benign low-level hardware routine using cache bypass mode for MMIO"
+}
